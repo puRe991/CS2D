@@ -144,6 +144,64 @@ flat = false
 align = 1
 _sections_unfolded = [ "Rect" ]
 
+[node name="score" type="Label" parent="CanvasLayer" index="2"]
+
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+margin_left = 440.0
+margin_top = 6.0
+margin_right = 600.0
+margin_bottom = 28.0
+rect_scale = Vector2( 2, 2 )
+rect_pivot_offset = Vector2( 0, 0 )
+mouse_filter = 2
+mouse_default_cursor_shape = 0
+size_flags_horizontal = 1
+size_flags_vertical = 4
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "T  0  :  0  CT"
+percent_visible = 1.0
+lines_skipped = 0
+max_lines_visible = -1
+
+[node name="spawns T" type="Node" parent="." index="6"]
+
+[node name="point 1" type="Position2D" parent="spawns T" index="0"]
+
+position = Vector2( -7951, -355 )
+
+[node name="point 2" type="Position2D" parent="spawns T" index="1"]
+
+position = Vector2( -8271, -355 )
+
+[node name="point 3" type="Position2D" parent="spawns T" index="2"]
+
+position = Vector2( -8591, -355 )
+
+[node name="point 4" type="Position2D" parent="spawns T" index="3"]
+
+position = Vector2( -8911, -355 )
+
+[node name="spawns CT" type="Node" parent="." index="7"]
+
+[node name="point 1" type="Position2D" parent="spawns CT" index="0"]
+
+position = Vector2( 9329, 3805 )
+
+[node name="point 2" type="Position2D" parent="spawns CT" index="1"]
+
+position = Vector2( 9329, 3485 )
+
+[node name="point 3" type="Position2D" parent="spawns CT" index="2"]
+
+position = Vector2( 9329, 4125 )
+
+[node name="point 4" type="Position2D" parent="spawns CT" index="3"]
+
+position = Vector2( 9329, 3165 )
+
 [connection signal="pressed" from="CanvasLayer/play" to="." method="_on_play_pressed"]
 
 

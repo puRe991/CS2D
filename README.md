@@ -15,9 +15,10 @@ The project uses 2 scenes to handle lobby and 1 singleton to manage multiplayer 
 | --- | --- |
 | `W` `A` `S` `D` | Move (strafing, independent of where you aim) |
 | Mouse | Aim |
-| Left Mouse / `Space` | Fire |
+| Left Mouse / `Space` | Fire (hold for the rifle, it is automatic) |
 | `R` / `Ctrl` | Reload |
 | `Shift` | Walk (slower) |
+| `1` `2` `3` `4` | Handgun, rifle, shotgun, knife |
 
 Movement is CS-style: you strafe relative to your aim, so the feet animation
 switches between `run`, `walk`, `strafe-left` and `strafe-right` depending on
@@ -28,6 +29,34 @@ where you move in relation to where you look.
 On devices reporting a touchscreen the on-screen joystick and the fire/reload
 buttons are used instead, and the joystick both aims and moves. The touch
 controls are hidden on desktop.
+
+## Weapons
+
+| Weapon | Magazine | Damage | Fire mode |
+| --- | --- | --- | --- |
+| Handgun | 12 | 25 | Semi |
+| Rifle | 30 | 22 | Automatic, slight spread |
+| Shotgun | 8 | 13 per pellet, 6 pellets | Semi, wide spread |
+| Knife | - | 55 | Melee, 190 px in front of you |
+
+The rate of fire is the playback speed of each weapon's shoot animation, so
+the picture and the timing can never drift apart. Sprite frames are loaded
+per weapon on first use and shared by every player, because holding all 420
+frames at once would keep about 90 MB of textures open.
+
+## Teams and rounds
+
+Players are split into `T` and `CT`. The server balances the teams as people
+join and is the only one that decides, clients only ask; use the Switch Team
+button in the lobby. Team mates cannot damage each other, and each team has
+its own base to spawn in.
+
+A round ends when one team has no one left standing. The winning team scores,
+the result is shown for four seconds and then everybody respawns with full
+health and a fresh handgun. The score sits at the top of the screen.
+
+Note that damage is still evaluated by each peer for itself, so the round
+result is only as trustworthy as the clients are.
 
 ### Testing
 

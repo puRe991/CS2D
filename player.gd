@@ -5,9 +5,11 @@ export var speed_walk=260
 export var speed_run=660
 export var health = 100
 
-var bullets=10
-
 var weapon='handgun'
+var mag={}
+var alive=true
+var team=0
+var reloading=false
 
 #Wird vom Touch Joystick (CanvasLayer/Joystick/joytop) gesetzt
 var touch_dir=Vector2(0,0)
@@ -20,11 +22,23 @@ var touch_ui=false
 var body_state=''
 var feet_state=''
 
+#Kollisionswerte aus der Szene, zum Wiederherstellen beim Respawn
+var col_layer=2
+var col_mask=3
+
 remote var pla=false
 remote var rrot=0
 remote var rpos=Vector2(0,0)
+
 func _ready():
 	touch_ui=OS.has_touchscreen_ui_hint()
+	col_layer=collision_layer
+	col_mask=collision_mask
+	#Alle Spieler teilen sich die Frames aus dem weapons-Singleton
+	$body.frames=weapons.body_frames
+	$body.animation=weapon+'-idle'
+	for w in weapons.ORDER:
+		mag[w]=weapons.DATA[w]['mag']
 
 func delrest():
 	if get_name()!=str(get_tree().get_network_unique_id()):
@@ -40,21 +54,21 @@ func delrest():
 			$CanvasLayer/fire.hide()
 			$CanvasLayer/reload.hide()
 	set_network_master(int(get_name()))
+	team=multiplayer.team_of(int(get_name()))
 	$Name.text=multiplayer.players[int(get_name())]
+	$Name.add_color_override('font_color',multiplayer.TEAM_COLORS[team])
 
 func _process(delta):
 	if is_network_master():
 		$CanvasLayer/hp.value=health
-		$CanvasLayer/bullets.text=str(bullets)
-	if health<=0 and is_network_master():
-		var cam=$Camera2D
-		remove_child(cam)
-		if get_tree().get_nodes_in_group('player').size()>1:
-			for x in get_tree().get_nodes_in_group('player'):
-				if x != self:
-					x.add_child(cam)
-					cam.position=Vector2(0,0)
-		rpc('del')
+		$CanvasLayer/bullets.text=ammo_text()
+		if alive and health<=0:
+			rpc('die')
+
+func ammo_text():
+	if weapons.is_melee(weapon):
+		return weapon.to_upper()
+	return weapon.to_upper()+'  '+str(mag[weapon])+'/'+str(weapons.DATA[weapon]['mag'])
 
 #Blickrichtung: Maus am Desktop, Joystick am Touchgeraet
 func aim():
@@ -83,6 +97,8 @@ func input_direction():
 
 func _physics_process(delta):
 	if is_network_master():
+		if !alive:
+			return
 		aim()
 
 		var direction=input_direction()
@@ -113,18 +129,9 @@ func _physics_process(delta):
 			else:
 				animate_body(weapon+'-move')
 
-		if Input.is_action_just_pressed('fire') and bullets and !pla:
-			bullets-=1
-			animate_body(weapon+'-shoot',true)
-			pla=true
-			rset('pla',pla)
-			rpc('fire')
-
-		if Input.is_action_just_pressed('reload') and bullets<10 and !pla:
-			bullets=10
-			animate_body(weapon+'-reload',true)
-			pla=true
-			rset('pla',pla)
+		handle_weapon_switch()
+		handle_attack()
+		handle_reload()
 
 		rpos=position
 		rrot=rotation
@@ -135,14 +142,108 @@ func _physics_process(delta):
 		rotation=rrot
 		position=rpos
 
+func handle_weapon_switch():
+	if pla:
+		return
+	for w in weapons.ORDER:
+		if w!=weapon and Input.is_action_just_pressed(weapons.slot_action(w)):
+			rpc('set_weapon',w)
+			return
 
-sync func fire():
-	var direction=Vector2(cos(rotation),sin(rotation))
-	var bul=multiplayer.bullet.instance()
-	get_parent().add_child(bul)
-	bul.global_rotation=global_rotation
-	bul.global_position=$firepoint.global_position
-	bul.apply_impulse(Vector2(0,0),direction*2000)
+func handle_attack():
+	if pla:
+		return
+	var d=weapons.DATA[weapon]
+	var pressed=false
+	if d['auto']:
+		pressed=Input.is_action_pressed('fire')
+	else:
+		pressed=Input.is_action_just_pressed('fire')
+	if !pressed:
+		return
+	if weapons.is_melee(weapon):
+		pla=true
+		animate_body(weapon+'-meleeattack',true)
+		rpc('melee',d['damage'],d['range'])
+	elif mag[weapon]>0:
+		mag[weapon]-=1
+		pla=true
+		animate_body(weapon+'-shoot',true)
+		var spreads=[]
+		for i in range(d['pellets']):
+			spreads.append(rand_range(-d['spread'],d['spread']))
+		rpc('fire',spreads,d['damage'])
+
+func handle_reload():
+	if pla or weapons.is_melee(weapon):
+		return
+	if !Input.is_action_just_pressed('reload'):
+		return
+	if mag[weapon]>=weapons.DATA[weapon]['mag']:
+		return
+	reloading=true
+	pla=true
+	animate_body(weapon+'-reload',true)
+
+sync func set_weapon(w):
+	#Laedt die Frames auch bei den anderen Peers, die spielen die Animation ab
+	weapons.build(w)
+	weapon=w
+	reloading=false
+	pla=false
+	body_state=''
+
+sync func fire(spreads,damage):
+	for s in spreads:
+		var a=rotation+s
+		var bul=multiplayer.bullet.instance()
+		get_parent().add_child(bul)
+		bul.damage=damage
+		bul.team=team
+		bul.global_rotation=a
+		bul.global_position=$firepoint.global_position
+		bul.apply_impulse(Vector2(0,0),Vector2(cos(a),sin(a))*2000)
+
+sync func melee(damage,rng):
+	var facing=Vector2(cos(rotation),sin(rotation))
+	for p in get_tree().get_nodes_in_group('player'):
+		if p==self or !p.alive or p.team==team:
+			continue
+		var to=p.global_position-global_position
+		if to.length()<=rng and facing.dot(to.normalized())>0.7:
+			p.health-=damage
+
+sync func die():
+	if !alive:
+		return
+	alive=false
+	$body.hide()
+	$feet.hide()
+	$Name.hide()
+	#Die Leiche soll niemanden mehr blockieren und keine Kugeln fangen
+	set_collision_layer(0)
+	set_collision_mask(0)
+
+sync func respawn(pos):
+	alive=true
+	health=100
+	weapon='handgun'
+	reloading=false
+	pla=false
+	for w in weapons.ORDER:
+		mag[w]=weapons.DATA[w]['mag']
+	set_collision_layer(col_layer)
+	set_collision_mask(col_mask)
+	position=pos
+	rpos=pos
+	body_state=''
+	feet_state=''
+	$body.show()
+	$feet.show()
+	$Name.show()
+	$body.play(weapon+'-idle')
+	$feet.play('idle')
+
 #Animations
 #Nur bei Wechsel senden, sonst laeuft jeden Frame ein RPC raus
 func animate_body(anim,force=false):
@@ -169,5 +270,9 @@ sync func del():
 	queue_free()
 
 func _on_body_animation_finished():
-	if $body.animation==weapon+'-shoot' or $body.animation==weapon+'-reload':
+	var a=$body.animation
+	if a==weapon+'-shoot' or a==weapon+'-reload' or a==weapon+'-meleeattack':
 		pla=false
+		if reloading and a==weapon+'-reload':
+			mag[weapon]=weapons.DATA[weapon]['mag']
+		reloading=false
