@@ -1,138 +1,578 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://lobby.gd" type="Script" id=1]
+[ext_resource path="res://mapexport.png" type="Texture" id=2]
 
-[node name="Node2D" type="Node2D"]
+[sub_resource type="StyleBoxFlat" id=1]
 
-position = Vector2( -180.38, -90.1898 )
-scale = Vector2( 1.5, 1.5 )
+bg_color = Color( 0.078, 0.098, 0.125, 0.94 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.16, 0.19, 0.23, 1 )
+
+[sub_resource type="StyleBoxFlat" id=2]
+
+content_margin_left = 12.0
+content_margin_right = 12.0
+content_margin_top = 6.0
+content_margin_bottom = 6.0
+bg_color = Color( 0.055, 0.07, 0.09, 1 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.19, 0.22, 0.27, 1 )
+
+[sub_resource type="StyleBoxFlat" id=3]
+
+content_margin_left = 12.0
+content_margin_right = 12.0
+content_margin_top = 6.0
+content_margin_bottom = 6.0
+bg_color = Color( 0.07, 0.088, 0.113, 1 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color( 0.87, 0.62, 0.15, 1 )
+
+[sub_resource type="StyleBoxFlat" id=4]
+
+bg_color = Color( 0.87, 0.62, 0.15, 1 )
+
+[sub_resource type="StyleBoxFlat" id=5]
+
+bg_color = Color( 0.96, 0.71, 0.23, 1 )
+
+[sub_resource type="StyleBoxFlat" id=6]
+
+bg_color = Color( 0.09, 0.11, 0.14, 0.9 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.31, 0.36, 0.43, 1 )
+
+[sub_resource type="StyleBoxFlat" id=7]
+
+bg_color = Color( 0.14, 0.17, 0.21, 0.95 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.36, 0.66, 1, 1 )
+
+[sub_resource type="StyleBoxEmpty" id=8]
+
+[sub_resource type="Gradient" id=9]
+
+offsets = PoolRealArray( 0, 0.45, 1 )
+colors = PoolColorArray( 0.031, 0.043, 0.059, 0.96, 0.031, 0.043, 0.059, 0.88, 0.031, 0.043, 0.059, 0.12 )
+
+[sub_resource type="GradientTexture" id=10]
+
+gradient = SubResource( 9 )
+width = 512
+
+[sub_resource type="StyleBoxFlat" id=11]
+
+content_margin_left = 18.0
+bg_color = Color( 0.063, 0.078, 0.098, 0.55 )
+
+[sub_resource type="StyleBoxFlat" id=12]
+
+content_margin_left = 18.0
+bg_color = Color( 0.11, 0.13, 0.16, 0.95 )
+
+[node name="Lobby" type="Control"]
+
+anchor_right = 1.0
+anchor_bottom = 1.0
 script = ExtResource( 1 )
 
-[node name="server" type="Button" parent="." index="0"]
+[node name="bg" type="ColorRect" parent="."]
 
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_left = 201.0
-margin_top = 329.0
-margin_right = 355.0
-margin_bottom = 422.0
-rect_pivot_offset = Vector2( 0, 0 )
-focus_mode = 2
-mouse_filter = 0
-mouse_default_cursor_shape = 0
-size_flags_horizontal = 1
-size_flags_vertical = 1
-toggle_mode = false
-enabled_focus_mode = 2
-shortcut = null
-group = null
-text = "SERVER"
-flat = false
-align = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0.043, 0.055, 0.071, 1 )
 
-[node name="client" type="Button" parent="." index="1"]
+[node name="backdrop" type="TextureRect" parent="."]
 
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_left = 593.0
-margin_top = 332.0
-margin_right = 747.0
-margin_bottom = 425.0
-rect_pivot_offset = Vector2( 0, 0 )
-focus_mode = 2
-mouse_filter = 0
-mouse_default_cursor_shape = 0
-size_flags_horizontal = 1
-size_flags_vertical = 1
-toggle_mode = false
-enabled_focus_mode = 2
-shortcut = null
-group = null
-text = "CLIENT"
-flat = false
-align = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+modulate = Color( 0.22, 0.25, 0.29, 1 )
+texture = ExtResource( 2 )
+expand = true
+stretch_mode = 7
 
-[node name="Name" type="LineEdit" parent="." index="2"]
+[node name="vignette" type="TextureRect" parent="."]
 
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_left = 381.0
-margin_top = 120.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = SubResource( 10 )
+expand = true
+stretch_mode = 1
+
+[node name="accent" type="ColorRect" parent="."]
+
+margin_left = 100.0
+margin_top = 96.0
+margin_right = 105.0
+margin_bottom = 176.0
+mouse_filter = 2
+color = Color( 0.87, 0.62, 0.15, 1 )
+
+[node name="title" type="Label" parent="."]
+
+margin_left = 126.0
+margin_top = 92.0
+margin_right = 326.0
+margin_bottom = 118.0
+rect_scale = Vector2( 3.6, 3.6 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.93, 0.94, 0.96, 1 )
+text = "CS2D"
+
+[node name="subtitle" type="Label" parent="."]
+
+margin_left = 128.0
+margin_top = 148.0
 margin_right = 560.0
-margin_bottom = 171.0
-rect_pivot_offset = Vector2( 0, 0 )
-focus_mode = 2
-mouse_filter = 0
-mouse_default_cursor_shape = 1
-size_flags_horizontal = 1
-size_flags_vertical = 1
+margin_bottom = 166.0
+rect_scale = Vector2( 1.3, 1.3 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.87, 0.62, 0.15, 1 )
+text = "COUNTER-STRIKE INSPIRED 2D SHOOTER"
+
+[node name="indicator" type="ColorRect" parent="."]
+
+margin_left = 100.0
+margin_top = 232.0
+margin_right = 104.0
+margin_bottom = 280.0
+mouse_filter = 2
+color = Color( 0.87, 0.62, 0.15, 1 )
+
+[node name="nav_play" type="Button" parent="."]
+
+margin_left = 104.0
+margin_top = 232.0
+margin_right = 344.0
+margin_bottom = 280.0
+custom_styles/normal = SubResource( 11 )
+custom_styles/hover = SubResource( 12 )
+custom_styles/pressed = SubResource( 12 )
+custom_styles/focus = SubResource( 8 )
+custom_colors/font_color = Color( 0.62, 0.68, 0.75, 1 )
+custom_colors/font_color_hover = Color( 0.93, 0.94, 0.96, 1 )
+align = 0
+text = "PLAY"
+
+[node name="nav_settings" type="Button" parent="."]
+
+margin_left = 104.0
+margin_top = 288.0
+margin_right = 344.0
+margin_bottom = 336.0
+custom_styles/normal = SubResource( 11 )
+custom_styles/hover = SubResource( 12 )
+custom_styles/pressed = SubResource( 12 )
+custom_styles/focus = SubResource( 8 )
+custom_colors/font_color = Color( 0.62, 0.68, 0.75, 1 )
+custom_colors/font_color_hover = Color( 0.93, 0.94, 0.96, 1 )
+align = 0
+text = "SETTINGS"
+
+[node name="nav_controls" type="Button" parent="."]
+
+margin_left = 104.0
+margin_top = 344.0
+margin_right = 344.0
+margin_bottom = 392.0
+custom_styles/normal = SubResource( 11 )
+custom_styles/hover = SubResource( 12 )
+custom_styles/pressed = SubResource( 12 )
+custom_styles/focus = SubResource( 8 )
+custom_colors/font_color = Color( 0.62, 0.68, 0.75, 1 )
+custom_colors/font_color_hover = Color( 0.93, 0.94, 0.96, 1 )
+align = 0
+text = "CONTROLS"
+
+[node name="nav_quit" type="Button" parent="."]
+
+margin_left = 104.0
+margin_top = 400.0
+margin_right = 344.0
+margin_bottom = 448.0
+custom_styles/normal = SubResource( 11 )
+custom_styles/hover = SubResource( 12 )
+custom_styles/pressed = SubResource( 12 )
+custom_styles/focus = SubResource( 8 )
+custom_colors/font_color = Color( 0.62, 0.68, 0.75, 1 )
+custom_colors/font_color_hover = Color( 0.9, 0.45, 0.35, 1 )
+align = 0
+text = "QUIT"
+
+[node name="footer" type="Label" parent="."]
+
+margin_left = 100.0
+margin_top = 632.0
+margin_right = 800.0
+margin_bottom = 648.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.33, 0.38, 0.44, 1 )
+text = "WASD move   MOUSE aim   1-4 weapons   R reload   M team"
+
+[node name="pane_play" type="Control" parent="."]
+
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="panel" type="Panel" parent="pane_play"]
+
+margin_left = 400.0
+margin_top = 190.0
+margin_right = 1180.0
+margin_bottom = 600.0
+mouse_filter = 2
+custom_styles/panel = SubResource( 1 )
+
+[node name="head" type="ColorRect" parent="pane_play"]
+
+margin_left = 400.0
+margin_top = 190.0
+margin_right = 1180.0
+margin_bottom = 194.0
+mouse_filter = 2
+color = Color( 0.87, 0.62, 0.15, 1 )
+
+[node name="heading" type="Label" parent="pane_play"]
+
+margin_left = 428.0
+margin_top = 220.0
+margin_right = 700.0
+margin_bottom = 238.0
+rect_scale = Vector2( 1.6, 1.6 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.93, 0.94, 0.96, 1 )
+text = "PLAY"
+
+[node name="lbl_name" type="Label" parent="pane_play"]
+
+margin_left = 428.0
+margin_top = 268.0
+margin_right = 700.0
+margin_bottom = 284.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.45, 0.51, 0.58, 1 )
+text = "PLAYER NAME"
+
+[node name="Name" type="LineEdit" parent="pane_play"]
+
+margin_left = 428.0
+margin_top = 290.0
+margin_right = 840.0
+margin_bottom = 322.0
+custom_styles/normal = SubResource( 2 )
+custom_styles/focus = SubResource( 3 )
+custom_colors/font_color = Color( 0.91, 0.93, 0.95, 1 )
+custom_colors/cursor_color = Color( 0.87, 0.62, 0.15, 1 )
 text = "Player 1"
-align = 1
-focus_mode = 2
-context_menu_enabled = true
-placeholder_alpha = 0.6
-caret_blink = false
-caret_blink_speed = 0.65
-caret_position = 0
 
-[node name="port" type="LineEdit" parent="." index="3"]
+[node name="lbl_ip" type="Label" parent="pane_play"]
 
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_left = 386.0
-margin_top = 254.0
-margin_right = 553.0
-margin_bottom = 296.0
-rect_pivot_offset = Vector2( 0, 0 )
-focus_mode = 2
-mouse_filter = 0
-mouse_default_cursor_shape = 1
-size_flags_horizontal = 1
-size_flags_vertical = 1
-text = "33456"
-align = 1
-focus_mode = 2
-context_menu_enabled = true
-placeholder_alpha = 0.6
-caret_blink = false
-caret_blink_speed = 0.65
-caret_position = 0
+margin_left = 428.0
+margin_top = 342.0
+margin_right = 700.0
+margin_bottom = 358.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.45, 0.51, 0.58, 1 )
+text = "SERVER IP"
 
-[node name="ip" type="LineEdit" parent="." index="4"]
+[node name="ip" type="LineEdit" parent="pane_play"]
 
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-margin_left = 386.0
-margin_top = 188.0
-margin_right = 553.0
-margin_bottom = 230.0
-rect_pivot_offset = Vector2( 0, 0 )
-focus_mode = 2
-mouse_filter = 0
-mouse_default_cursor_shape = 1
-size_flags_horizontal = 1
-size_flags_vertical = 1
+margin_left = 428.0
+margin_top = 364.0
+margin_right = 684.0
+margin_bottom = 396.0
+custom_styles/normal = SubResource( 2 )
+custom_styles/focus = SubResource( 3 )
+custom_colors/font_color = Color( 0.91, 0.93, 0.95, 1 )
+custom_colors/cursor_color = Color( 0.87, 0.62, 0.15, 1 )
 text = "127.0.0.1"
-align = 1
-focus_mode = 2
-context_menu_enabled = true
-placeholder_alpha = 0.6
-caret_blink = false
-caret_blink_speed = 0.65
-caret_position = 0
 
-[connection signal="pressed" from="server" to="." method="_on_server_pressed"]
+[node name="lbl_port" type="Label" parent="pane_play"]
 
-[connection signal="pressed" from="client" to="." method="_on_client_pressed"]
+margin_left = 704.0
+margin_top = 342.0
+margin_right = 840.0
+margin_bottom = 358.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.45, 0.51, 0.58, 1 )
+text = "PORT"
 
+[node name="port" type="LineEdit" parent="pane_play"]
 
+margin_left = 704.0
+margin_top = 364.0
+margin_right = 840.0
+margin_bottom = 396.0
+custom_styles/normal = SubResource( 2 )
+custom_styles/focus = SubResource( 3 )
+custom_colors/font_color = Color( 0.91, 0.93, 0.95, 1 )
+custom_colors/cursor_color = Color( 0.87, 0.62, 0.15, 1 )
+text = "33456"
+
+[node name="server" type="Button" parent="pane_play"]
+
+margin_left = 428.0
+margin_top = 436.0
+margin_right = 676.0
+margin_bottom = 488.0
+custom_styles/normal = SubResource( 4 )
+custom_styles/hover = SubResource( 5 )
+custom_styles/pressed = SubResource( 5 )
+custom_styles/focus = SubResource( 8 )
+custom_colors/font_color = Color( 0.06, 0.07, 0.09, 1 )
+custom_colors/font_color_hover = Color( 0.04, 0.05, 0.06, 1 )
+custom_colors/font_color_pressed = Color( 0.04, 0.05, 0.06, 1 )
+text = "CREATE SERVER"
+
+[node name="client" type="Button" parent="pane_play"]
+
+margin_left = 692.0
+margin_top = 436.0
+margin_right = 888.0
+margin_bottom = 488.0
+custom_styles/normal = SubResource( 6 )
+custom_styles/hover = SubResource( 7 )
+custom_styles/pressed = SubResource( 7 )
+custom_styles/focus = SubResource( 8 )
+custom_colors/font_color = Color( 0.85, 0.88, 0.91, 1 )
+custom_colors/font_color_hover = Color( 0.36, 0.66, 1, 1 )
+custom_colors/font_color_pressed = Color( 0.36, 0.66, 1, 1 )
+text = "JOIN SERVER"
+
+[node name="lbl_hint" type="Label" parent="pane_play"]
+
+margin_left = 428.0
+margin_top = 512.0
+margin_right = 1150.0
+margin_bottom = 560.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.4, 0.45, 0.52, 1 )
+text = "Host a match, or join one by entering the host's address.
+Both sides must use the same port. Your local addresses are listed in the lobby."
+autowrap = true
+
+[node name="pane_settings" type="Control" parent="."]
+
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="panel" type="Panel" parent="pane_settings"]
+
+margin_left = 400.0
+margin_top = 190.0
+margin_right = 1180.0
+margin_bottom = 600.0
+mouse_filter = 2
+custom_styles/panel = SubResource( 1 )
+
+[node name="head" type="ColorRect" parent="pane_settings"]
+
+margin_left = 400.0
+margin_top = 190.0
+margin_right = 1180.0
+margin_bottom = 194.0
+mouse_filter = 2
+color = Color( 0.87, 0.62, 0.15, 1 )
+
+[node name="heading" type="Label" parent="pane_settings"]
+
+margin_left = 428.0
+margin_top = 220.0
+margin_right = 700.0
+margin_bottom = 238.0
+rect_scale = Vector2( 1.6, 1.6 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.93, 0.94, 0.96, 1 )
+text = "SETTINGS"
+
+[node name="lbl_fullscreen" type="Label" parent="pane_settings"]
+
+margin_left = 428.0
+margin_top = 288.0
+margin_right = 800.0
+margin_bottom = 304.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.78, 0.82, 0.87, 1 )
+text = "FULLSCREEN"
+
+[node name="opt_fullscreen" type="Button" parent="pane_settings"]
+
+margin_left = 940.0
+margin_top = 278.0
+margin_right = 1060.0
+margin_bottom = 314.0
+toggle_mode = true
+custom_styles/normal = SubResource( 6 )
+custom_styles/hover = SubResource( 7 )
+custom_styles/pressed = SubResource( 6 )
+custom_styles/focus = SubResource( 8 )
+text = "OFF"
+
+[node name="lbl_vsync" type="Label" parent="pane_settings"]
+
+margin_left = 428.0
+margin_top = 340.0
+margin_right = 800.0
+margin_bottom = 356.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.78, 0.82, 0.87, 1 )
+text = "VERTICAL SYNC"
+
+[node name="opt_vsync" type="Button" parent="pane_settings"]
+
+margin_left = 940.0
+margin_top = 330.0
+margin_right = 1060.0
+margin_bottom = 366.0
+toggle_mode = true
+custom_styles/normal = SubResource( 6 )
+custom_styles/hover = SubResource( 7 )
+custom_styles/pressed = SubResource( 6 )
+custom_styles/focus = SubResource( 8 )
+text = "OFF"
+
+[node name="lbl_crosshair" type="Label" parent="pane_settings"]
+
+margin_left = 428.0
+margin_top = 392.0
+margin_right = 800.0
+margin_bottom = 408.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.78, 0.82, 0.87, 1 )
+text = "CROSSHAIR"
+
+[node name="opt_crosshair" type="Button" parent="pane_settings"]
+
+margin_left = 940.0
+margin_top = 382.0
+margin_right = 1060.0
+margin_bottom = 418.0
+toggle_mode = true
+custom_styles/normal = SubResource( 6 )
+custom_styles/hover = SubResource( 7 )
+custom_styles/pressed = SubResource( 6 )
+custom_styles/focus = SubResource( 8 )
+text = "ON"
+
+[node name="lbl_fps" type="Label" parent="pane_settings"]
+
+margin_left = 428.0
+margin_top = 444.0
+margin_right = 800.0
+margin_bottom = 460.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.78, 0.82, 0.87, 1 )
+text = "SHOW FPS"
+
+[node name="opt_fps" type="Button" parent="pane_settings"]
+
+margin_left = 940.0
+margin_top = 434.0
+margin_right = 1060.0
+margin_bottom = 470.0
+toggle_mode = true
+custom_styles/normal = SubResource( 6 )
+custom_styles/hover = SubResource( 7 )
+custom_styles/pressed = SubResource( 6 )
+custom_styles/focus = SubResource( 8 )
+text = "OFF"
+
+[node name="settings_hint" type="Label" parent="pane_settings"]
+
+margin_left = 428.0
+margin_top = 522.0
+margin_right = 1150.0
+margin_bottom = 554.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.4, 0.45, 0.52, 1 )
+text = "Changes apply at once and are written to user://settings.cfg."
+autowrap = true
+
+[node name="pane_controls" type="Control" parent="."]
+
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="panel" type="Panel" parent="pane_controls"]
+
+margin_left = 400.0
+margin_top = 190.0
+margin_right = 1180.0
+margin_bottom = 600.0
+mouse_filter = 2
+custom_styles/panel = SubResource( 1 )
+
+[node name="head" type="ColorRect" parent="pane_controls"]
+
+margin_left = 400.0
+margin_top = 190.0
+margin_right = 1180.0
+margin_bottom = 194.0
+mouse_filter = 2
+color = Color( 0.87, 0.62, 0.15, 1 )
+
+[node name="heading" type="Label" parent="pane_controls"]
+
+margin_left = 428.0
+margin_top = 220.0
+margin_right = 700.0
+margin_bottom = 238.0
+rect_scale = Vector2( 1.6, 1.6 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.93, 0.94, 0.96, 1 )
+text = "CONTROLS"
+
+[node name="grid" type="GridContainer" parent="pane_controls"]
+
+margin_left = 428.0
+margin_top = 274.0
+margin_right = 1150.0
+margin_bottom = 560.0
+mouse_filter = 2
+custom_constants/vseparation = 6
+custom_constants/hseparation = 40
+columns = 4
+
+[connection signal="pressed" from="nav_play" to="." method="_on_nav_play_pressed"]
+
+[connection signal="pressed" from="nav_settings" to="." method="_on_nav_settings_pressed"]
+
+[connection signal="pressed" from="nav_controls" to="." method="_on_nav_controls_pressed"]
+
+[connection signal="pressed" from="nav_quit" to="." method="_on_nav_quit_pressed"]
+
+[connection signal="pressed" from="pane_play/server" to="." method="_on_server_pressed"]
+
+[connection signal="pressed" from="pane_play/client" to="." method="_on_client_pressed"]
+
+[connection signal="toggled" from="pane_settings/opt_fullscreen" to="." method="_on_fullscreen_toggled"]
+
+[connection signal="toggled" from="pane_settings/opt_vsync" to="." method="_on_vsync_toggled"]
+
+[connection signal="toggled" from="pane_settings/opt_crosshair" to="." method="_on_crosshair_toggled"]
+
+[connection signal="toggled" from="pane_settings/opt_fps" to="." method="_on_fps_toggled"]

@@ -19,6 +19,10 @@ The project uses 2 scenes to handle lobby and 1 singleton to manage multiplayer 
 | `R` / `Ctrl` | Reload |
 | `Shift` | Walk (slower) |
 | `1` `2` `3` `4` | Handgun, rifle, shotgun, knife |
+| `M` | Team menu |
+
+The controls screen in the main menu reads the bindings straight out of the
+input map, so it cannot drift away from what the game actually does.
 
 Movement is CS-style: you strafe relative to your aim, so the feet animation
 switches between `run`, `walk`, `strafe-left` and `strafe-right` depending on
@@ -29,6 +33,23 @@ where you move in relation to where you look.
 On devices reporting a touchscreen the on-screen joystick and the fire/reload
 buttons are used instead, and the joystick both aims and moves. The touch
 controls are hidden on desktop.
+
+## Menus and HUD
+
+The main menu has four entries, all of them live: **PLAY** hosts or joins a
+match, **SETTINGS** switches fullscreen, vertical sync, the crosshair and the
+FPS counter, **CONTROLS** lists the current key bindings, and **QUIT** exits.
+Settings take effect the moment you flip them and are written to
+`user://settings.cfg`, so they survive a restart. The player name is
+remembered the same way.
+
+In game, `M` opens the team menu. It blocks aiming, movement and firing
+while it is open, and the team you pick takes effect on the next round, the
+way Counter-Strike does it.
+
+The HUD follows the same layout: health bottom left, weapon and magazine
+bottom right, the round score in a bar at the top with the team colours, and
+a crosshair in the middle.
 
 ## Weapons
 
@@ -62,8 +83,8 @@ result is only as trustworthy as the clients are.
 
 #### Configuring Server
 To test currently, 
-Run the project and Enter Player Name and Create Server, 
-Note the IPs listed bellow in lobby
+Run the project, enter a player name under PLAY and press CREATE SERVER,
+then note the addresses listed under THIS MACHINE in the lobby
 
 #### Configuring Client
 Run it again in same Computer or another connected to same network

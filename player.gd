@@ -26,6 +26,9 @@ var feet_state=''
 var col_layer=2
 var col_mask=3
 
+#Solange das Teammenue offen ist nimmt der Spieler keine Eingaben an
+var menu_open=false
+
 remote var pla=false
 remote var rrot=0
 remote var rpos=Vector2(0,0)
@@ -61,7 +64,12 @@ func delrest():
 func _process(delta):
 	if is_network_master():
 		$CanvasLayer/hp.value=health
+		$CanvasLayer/hp_value.text=str(max(0,health))
 		$CanvasLayer/bullets.text=ammo_text()
+		$CanvasLayer/crosshair.visible=settings.crosshair and alive and !menu_open
+		$CanvasLayer/fps.visible=settings.show_fps
+		if settings.show_fps:
+			$CanvasLayer/fps.text=str(Engine.get_frames_per_second())+' FPS'
 		if alive and health<=0:
 			rpc('die')
 
@@ -72,6 +80,8 @@ func ammo_text():
 
 #Blickrichtung: Maus am Desktop, Joystick am Touchgeraet
 func aim():
+	if menu_open:
+		return
 	if touch_ui:
 		if touch_active:
 			rotation=touch_dir.angle()
@@ -80,6 +90,8 @@ func aim():
 
 #WASD, faellt auf den Joystick zurueck solange keine Taste gedrueckt ist
 func input_direction():
+	if menu_open:
+		return Vector2(0,0)
 	var dir=Vector2(0,0)
 	if Input.is_action_pressed('right'):
 		dir.x+=1
@@ -143,7 +155,7 @@ func _physics_process(delta):
 		position=rpos
 
 func handle_weapon_switch():
-	if pla:
+	if pla or menu_open:
 		return
 	for w in weapons.ORDER:
 		if w!=weapon and Input.is_action_just_pressed(weapons.slot_action(w)):
@@ -151,7 +163,7 @@ func handle_weapon_switch():
 			return
 
 func handle_attack():
-	if pla:
+	if pla or menu_open:
 		return
 	var d=weapons.DATA[weapon]
 	var pressed=false
@@ -175,7 +187,7 @@ func handle_attack():
 		rpc('fire',spreads,d['damage'])
 
 func handle_reload():
-	if pla or weapons.is_melee(weapon):
+	if pla or menu_open or weapons.is_melee(weapon):
 		return
 	if !Input.is_action_just_pressed('reload'):
 		return
@@ -227,6 +239,9 @@ sync func die():
 sync func respawn(pos):
 	alive=true
 	health=100
+	#Ein Teamwechsel aus dem M-Menue wird erst hier wirksam
+	team=multiplayer.team_of(int(get_name()))
+	$Name.add_color_override('font_color',multiplayer.TEAM_COLORS[team])
 	weapon='handgun'
 	reloading=false
 	pla=false

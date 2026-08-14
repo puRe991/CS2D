@@ -1,8 +1,43 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://testscene1.gd" type="Script" id=1]
 [ext_resource path="res://desert tileset.tres" type="TileSet" id=2]
 [ext_resource path="res://mapexport.png" type="Texture" id=3]
+
+[sub_resource type="StyleBoxFlat" id=1]
+
+bg_color = Color( 0.078, 0.098, 0.125, 0.97 )
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.24, 0.28, 0.34, 1 )
+
+[sub_resource type="StyleBoxFlat" id=2]
+
+bg_color = Color( 0.16, 0.13, 0.07, 1 )
+border_width_left = 2
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.87, 0.62, 0.15, 1 )
+
+[sub_resource type="StyleBoxFlat" id=3]
+
+bg_color = Color( 0.87, 0.62, 0.15, 1 )
+
+[sub_resource type="StyleBoxFlat" id=4]
+
+bg_color = Color( 0.07, 0.11, 0.16, 1 )
+border_width_left = 2
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color( 0.36, 0.66, 1, 1 )
+
+[sub_resource type="StyleBoxFlat" id=5]
+
+bg_color = Color( 0.36, 0.66, 1, 1 )
 
 [node name="Node2D" type="Node2D" index="0"]
 
@@ -93,18 +128,46 @@ rotation = 0.0
 scale = Vector2( 1, 1 )
 transform = Transform2D( 1, 0, 0, 1, 0, 0 )
 
-[node name="won" type="Label" parent="CanvasLayer" index="0"]
+[node name="bannerbar" type="ColorRect" parent="CanvasLayer" index="0"]
+
+visible = false
+margin_left = 0.0
+margin_top = 292.0
+margin_right = 1280.0
+margin_bottom = 364.0
+mouse_filter = 2
+color = Color( 0.043, 0.055, 0.071, 0.88 )
+
+[node name="scorebar" type="ColorRect" parent="CanvasLayer" index="1"]
+
+margin_left = 500.0
+margin_top = 0.0
+margin_right = 780.0
+margin_bottom = 46.0
+mouse_filter = 2
+color = Color( 0.043, 0.055, 0.071, 0.86 )
+
+[node name="scoreline" type="ColorRect" parent="CanvasLayer" index="2"]
+
+margin_left = 500.0
+margin_top = 46.0
+margin_right = 780.0
+margin_bottom = 48.0
+mouse_filter = 2
+color = Color( 0.87, 0.62, 0.15, 1 )
+
+[node name="won" type="Label" parent="CanvasLayer" index="3"]
 
 visible = false
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_left = 292.0
-margin_top = 179.0
-margin_right = 381.0
-margin_bottom = 193.0
-rect_scale = Vector2( 5, 5 )
+margin_left = 396.0
+margin_top = 306.0
+margin_right = 485.0
+margin_bottom = 320.0
+rect_scale = Vector2( 3, 3 )
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 2
 mouse_default_cursor_shape = 0
@@ -117,7 +180,7 @@ lines_skipped = 0
 max_lines_visible = -1
 _sections_unfolded = [ "Rect", "custom_colors" ]
 
-[node name="play" type="Button" parent="CanvasLayer" index="1"]
+[node name="play" type="Button" parent="CanvasLayer" index="4"]
 
 visible = false
 anchor_left = 0.0
@@ -144,27 +207,143 @@ flat = false
 align = 1
 _sections_unfolded = [ "Rect" ]
 
-[node name="score" type="Label" parent="CanvasLayer" index="2"]
+[node name="score" type="Label" parent="CanvasLayer" index="5"]
 
 anchor_left = 0.0
 anchor_top = 0.0
 anchor_right = 0.0
 anchor_bottom = 0.0
-margin_left = 440.0
-margin_top = 6.0
-margin_right = 600.0
+margin_left = 600.0
+margin_top = 12.0
+margin_right = 680.0
 margin_bottom = 28.0
-rect_scale = Vector2( 2, 2 )
+rect_scale = Vector2( 1.9, 1.9 )
 rect_pivot_offset = Vector2( 0, 0 )
 mouse_filter = 2
 mouse_default_cursor_shape = 0
 size_flags_horizontal = 1
 size_flags_vertical = 4
+custom_colors/font_color = Color( 0.93, 0.94, 0.96, 1 )
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
-text = "T  0  :  0  CT"
+text = "0  :  0"
 percent_visible = 1.0
 lines_skipped = 0
 max_lines_visible = -1
+
+[node name="t_tag" type="Label" parent="CanvasLayer" index="6"]
+
+margin_left = 524.0
+margin_top = 13.0
+margin_right = 570.0
+margin_bottom = 29.0
+rect_scale = Vector2( 1.5, 1.5 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.95, 0.72, 0.24, 1 )
+text = "T"
+
+[node name="ct_tag" type="Label" parent="CanvasLayer" index="7"]
+
+margin_left = 718.0
+margin_top = 13.0
+margin_right = 772.0
+margin_bottom = 29.0
+rect_scale = Vector2( 1.5, 1.5 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.36, 0.66, 1, 1 )
+text = "CT"
+
+[node name="menulayer" type="CanvasLayer" parent="." index="8"]
+
+layer = 10
+
+[node name="teammenu" type="Control" parent="menulayer" index="0"]
+
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="dim" type="ColorRect" parent="menulayer/teammenu" index="0"]
+
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0.024, 0.031, 0.043, 0.78 )
+
+[node name="box" type="Panel" parent="menulayer/teammenu" index="1"]
+
+margin_left = 400.0
+margin_top = 214.0
+margin_right = 880.0
+margin_bottom = 506.0
+custom_styles/panel = SubResource( 1 )
+
+[node name="head" type="ColorRect" parent="menulayer/teammenu" index="2"]
+
+margin_left = 400.0
+margin_top = 214.0
+margin_right = 880.0
+margin_bottom = 218.0
+mouse_filter = 2
+color = Color( 0.87, 0.62, 0.15, 1 )
+
+[node name="title" type="Label" parent="menulayer/teammenu" index="3"]
+
+margin_left = 428.0
+margin_top = 244.0
+margin_right = 700.0
+margin_bottom = 262.0
+rect_scale = Vector2( 1.6, 1.6 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.93, 0.94, 0.96, 1 )
+text = "SELECT TEAM"
+
+[node name="current" type="Label" parent="menulayer/teammenu" index="4"]
+
+margin_left = 428.0
+margin_top = 282.0
+margin_right = 852.0
+margin_bottom = 298.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.45, 0.51, 0.58, 1 )
+text = "Currently: T"
+
+[node name="pick_t" type="Button" parent="menulayer/teammenu" index="5"]
+
+margin_left = 428.0
+margin_top = 316.0
+margin_right = 852.0
+margin_bottom = 364.0
+custom_styles/normal = SubResource( 2 )
+custom_styles/hover = SubResource( 3 )
+custom_styles/pressed = SubResource( 3 )
+custom_colors/font_color = Color( 0.87, 0.62, 0.15, 1 )
+custom_colors/font_color_hover = Color( 0.06, 0.07, 0.09, 1 )
+custom_colors/font_color_pressed = Color( 0.06, 0.07, 0.09, 1 )
+text = "TERRORISTS"
+
+[node name="pick_ct" type="Button" parent="menulayer/teammenu" index="6"]
+
+margin_left = 428.0
+margin_top = 376.0
+margin_right = 852.0
+margin_bottom = 424.0
+custom_styles/normal = SubResource( 4 )
+custom_styles/hover = SubResource( 5 )
+custom_styles/pressed = SubResource( 5 )
+custom_colors/font_color = Color( 0.36, 0.66, 1, 1 )
+custom_colors/font_color_hover = Color( 0.04, 0.05, 0.06, 1 )
+custom_colors/font_color_pressed = Color( 0.04, 0.05, 0.06, 1 )
+text = "COUNTER-TERRORISTS"
+
+[node name="hint" type="Label" parent="menulayer/teammenu" index="7"]
+
+margin_left = 428.0
+margin_top = 444.0
+margin_right = 852.0
+margin_bottom = 460.0
+mouse_filter = 2
+custom_colors/font_color = Color( 0.4, 0.45, 0.52, 1 )
+text = "Takes effect next round        [M] close"
 
 [node name="spawns T" type="Node" parent="." index="6"]
 
@@ -203,5 +382,9 @@ position = Vector2( 9329, 4125 )
 position = Vector2( 9329, 3165 )
 
 [connection signal="pressed" from="CanvasLayer/play" to="." method="_on_play_pressed"]
+
+[connection signal="pressed" from="menulayer/teammenu/pick_t" to="." method="_on_pick_t_pressed"]
+
+[connection signal="pressed" from="menulayer/teammenu/pick_ct" to="." method="_on_pick_ct_pressed"]
 
 

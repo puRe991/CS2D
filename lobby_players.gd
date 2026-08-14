@@ -3,10 +3,11 @@ func _ready():
 
 	if !get_tree().is_network_server():
 		$"Start Game".disabled=true
+		$"Start Game".text="WAITING FOR HOST"
+		$Label.text="Connected to "+multiplayer.self_name+"'s server."
 	else:
 		print(IP.get_local_addresses())
-		for x in IP.get_local_addresses():
-			$Label.text+=x+" , "
+		$Label.text=PoolStringArray(IP.get_local_addresses()).join("\n")
 func _process(delta):
 	$ItemList.clear()
 	for x in multiplayer.players:
