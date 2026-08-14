@@ -7,6 +7,28 @@ Counter Strike inspired 2D game in Godot
 
 The project uses 2 scenes to handle lobby and 1 singleton to manage multiplayer throughout
 
+## Controls
+
+### Desktop
+
+| Input | Action |
+| --- | --- |
+| `W` `A` `S` `D` | Move (strafing, independent of where you aim) |
+| Mouse | Aim |
+| Left Mouse / `Space` | Fire |
+| `R` / `Ctrl` | Reload |
+| `Shift` | Walk (slower) |
+
+Movement is CS-style: you strafe relative to your aim, so the feet animation
+switches between `run`, `walk`, `strafe-left` and `strafe-right` depending on
+where you move in relation to where you look.
+
+### Touch
+
+On devices reporting a touchscreen the on-screen joystick and the fire/reload
+buttons are used instead, and the joystick both aims and moves. The touch
+controls are hidden on desktop.
+
 ### Testing
 
 #### Configuring Server
