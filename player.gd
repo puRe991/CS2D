@@ -31,10 +31,14 @@ func delrest():
 		$CanvasLayer.queue_free()
 		$Camera2D.queue_free()
 		$showmask.queue_free()
-	elif !touch_ui:
-		$CanvasLayer/Joystick.hide()
-		$CanvasLayer/fire.hide()
-		$CanvasLayer/reload.hide()
+	else:
+		#Jede Spielerszene bringt current=true mit, der zuletzt gespawnte
+		#Spieler gewinnt sonst die Kamera und nimmt sie beim Aufraeumen mit
+		$Camera2D.make_current()
+		if !touch_ui:
+			$CanvasLayer/Joystick.hide()
+			$CanvasLayer/fire.hide()
+			$CanvasLayer/reload.hide()
 	set_network_master(int(get_name()))
 	$Name.text=multiplayer.players[int(get_name())]
 
