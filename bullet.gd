@@ -6,6 +6,7 @@ var team=-1
 var shooter=0
 var reward=0
 var armor_pen=0.0
+var wname=''
 var origin=Vector2(0,0)
 var falloff_start=0.0
 var falloff_end=1.0
@@ -33,7 +34,7 @@ func _process(delta):
 	#Trifft Waende genauso wie Spieler, in beiden Faellen ist die Kugel weg
 	for b in bodies:
 		if b.is_in_group('player') and b.alive and b.team!=team:
-			b.take_damage(damage_at_range(),shooter,reward,armor_pen)
+			b.take_damage(damage_at_range(),shooter,reward,armor_pen,wname)
 	queue_free()
 
 sync func del():

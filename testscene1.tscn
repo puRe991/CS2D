@@ -1,6 +1,7 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://testscene1.gd" type="Script" id=1]
+[ext_resource path="res://radar.gd" type="Script" id=4]
 [ext_resource path="res://desert tileset.tres" type="TileSet" id=2]
 [ext_resource path="res://mapexport.png" type="Texture" id=3]
 
@@ -315,6 +316,25 @@ position = Vector2( 9329, 4125 )
 
 position = Vector2( 9329, 3165 )
 
+[node name="radar" type="Control" parent="CanvasLayer" index="9"]
+
+margin_left = 16.0
+margin_top = 60.0
+margin_right = 216.0
+margin_bottom = 236.0
+mouse_filter = 2
+script = ExtResource( 4 )
+
+[node name="killfeed" type="VBoxContainer" parent="CanvasLayer" index="10"]
+
+margin_left = 900.0
+margin_top = 60.0
+margin_right = 1264.0
+margin_bottom = 220.0
+mouse_filter = 2
+alignment = 0
+custom_constants/separation = 4
+
 [node name="menulayer" type="CanvasLayer" parent="." index="8"]
 
 layer = 10
@@ -408,7 +428,61 @@ mouse_filter = 2
 custom_colors/font_color = Color( 0.4, 0.45, 0.52, 1 )
 text = "Takes effect next round        [M] close"
 
-[node name="buymenu" type="Control" parent="menulayer" index="1"]
+[node name="scoreboard" type="Control" parent="menulayer" index="1"]
+
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="dim" type="ColorRect" parent="menulayer/scoreboard" index="0"]
+
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0.024, 0.031, 0.043, 0.82 )
+
+[node name="box" type="Panel" parent="menulayer/scoreboard" index="1"]
+
+margin_left = 300.0
+margin_top = 140.0
+margin_right = 980.0
+margin_bottom = 560.0
+mouse_filter = 2
+custom_styles/panel = SubResource( 1 )
+
+[node name="head" type="ColorRect" parent="menulayer/scoreboard" index="2"]
+
+margin_left = 300.0
+margin_top = 140.0
+margin_right = 980.0
+margin_bottom = 144.0
+mouse_filter = 2
+color = Color( 0.55, 0.82, 0.29, 1 )
+
+[node name="title" type="Label" parent="menulayer/scoreboard" index="3"]
+
+margin_left = 328.0
+margin_top = 170.0
+margin_right = 640.0
+margin_bottom = 188.0
+rect_scale = Vector2( 1.6, 1.6 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.93, 0.95, 0.96, 1 )
+text = "SCOREBOARD"
+
+[node name="grid" type="GridContainer" parent="menulayer/scoreboard" index="4"]
+
+margin_left = 328.0
+margin_top = 220.0
+margin_right = 956.0
+margin_bottom = 530.0
+mouse_filter = 2
+custom_constants/vseparation = 8
+custom_constants/hseparation = 10
+columns = 5
+
+[node name="buymenu" type="Control" parent="menulayer" index="2"]
 
 visible = false
 anchor_right = 1.0

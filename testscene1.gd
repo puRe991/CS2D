@@ -19,13 +19,31 @@ var match_over=false
 #Nur auf dem Server, steuert den Verlustbonus
 var loss_streak=[0,0]
 
+var feed=[]
+var scoreboard_open=false
+
 func _ready():
 	if get_tree().is_network_server():
 		multiplayer.reset_money()
+	multiplayer.reset_stats()
 	spawn_all()
 	update_score()
 	build_buymenu()
+	setup_radar()
 	begin_freeze()
+
+#Das Radar bekommt die Kartengrenzen aus der Wand-Tilemap
+func setup_radar():
+	var up=get_node("up")
+	var cells=up.get_used_rect()
+	var cs=up.cell_size*up.scale
+	var origin=up.position
+	var mn=origin+Vector2(cells.position.x*cs.x,cells.position.y*cs.y)
+	var mx=origin+Vector2((cells.position.x+cells.size.x)*cs.x,(cells.position.y+cells.size.y)*cs.y)
+	$CanvasLayer/radar.setup(mn,mx)
+	var mapnode=get_node("map")
+	var half=mapnode.texture.get_size()*mapnode.scale*0.5
+	$CanvasLayer/radar.set_map(mapnode.texture,mapnode.position-half,mapnode.position+half)
 
 #Reihenfolge muss auf allen Peers gleich sein, sonst stehen die Spieler
 #anderswo als beim Nachbarn
@@ -150,7 +168,7 @@ func toggle_buymenu():
 
 #Ein offenes Menue sperrt Zielen, Laufen und Schiessen
 func sync_menu_block():
-	var open=$menulayer/teammenu.visible or $menulayer/buymenu.visible
+	var open=$menulayer/teammenu.visible or $menulayer/buymenu.visible or $menulayer/scoreboard.visible
 	var p=local_player()
 	if p!=null:
 		p.menu_open=open
@@ -238,6 +256,10 @@ func _process(delta):
 		toggle_teammenu()
 	if Input.is_action_just_pressed('buymenu'):
 		toggle_buymenu()
+	handle_scoreboard()
+	age_killfeed(delta)
+	if scoreboard_open:
+		refresh_scoreboard()
 
 	if freeze_in>0:
 		freeze_in-=delta
@@ -276,6 +298,9 @@ func _process(delta):
 		winner=multiplayer.TEAM_CT
 	rpc('end_round',winner)
 
+sync func reset_stats():
+	multiplayer.reset_stats()
+
 sync func end_round(winner):
 	round_active=false
 	restart_in=ROUND_END_DELAY
@@ -307,16 +332,126 @@ func award_round(winner):
 		loss_streak[loser]=min(multiplayer.LOSS_BONUS.size()-1,loss_streak[loser]+1)
 		loss_streak[winner]=max(0,loss_streak[winner]-1)
 
-#Wird vom sterbenden Spieler auf dem Server ausgeloest
-func award_kill(id,amount):
+#Wer ausser dem Toeter am meisten Schaden gemacht hat, bekommt den Assist
+func assist_for(p,killer):
+	var best=0
+	var who=0
+	for id in p.damagers:
+		if id==killer or id==0:
+			continue
+		if p.damagers[id]>=40 and p.damagers[id]>best:
+			best=p.damagers[id]
+			who=id
+	return who
+
+#Der Server wertet den Tod aus und meldet ihn an alle
+func register_death(victim):
 	if !get_tree().is_network_server():
 		return
-	if id==0 or amount<=0:
+	var p=get_node_or_null(str(victim))
+	if p==null:
 		return
-	if !multiplayer.players.has(id):
+	var killer=p.last_hit_by
+	if !multiplayer.players.has(killer):
+		killer=0
+	if killer!=0 and p.last_reward>0:
+		multiplayer.award(killer,p.last_reward)
+		multiplayer.rset('money',multiplayer.money)
+	rpc('death_notice',victim,killer,assist_for(p,killer),p.last_weapon)
+
+sync func death_notice(victim,killer,assist,wname):
+	multiplayer.add_stat(victim,'deaths',1)
+	if killer!=0:
+		multiplayer.add_stat(killer,'kills',1)
+	if assist!=0:
+		multiplayer.add_stat(assist,'assists',1)
+	push_killfeed(killer,victim,wname)
+
+func player_name(id):
+	if multiplayer.players.has(id):
+		return multiplayer.players[id]
+	return 'WORLD'
+
+#Killfeed oben rechts, Eintraege verfallen von selbst
+func push_killfeed(killer,victim,wname):
+	var box=$CanvasLayer/killfeed
+	var l=Label.new()
+	var line=player_name(killer)
+	if wname!='':
+		line+='  ['+wname+']  '
+	else:
+		line+='  '
+	line+=player_name(victim)
+	l.text=line
+	var col=Color(0.8,0.83,0.87)
+	if killer!=0:
+		col=multiplayer.TEAM_COLORS[multiplayer.team_of(killer)]
+	l.add_color_override('font_color',col)
+	l.add_color_override('font_color_shadow',Color(0,0,0,1))
+	box.add_child(l)
+	feed.append([l,6.0])
+	while feed.size()>5:
+		var old=feed[0]
+		feed.remove(0)
+		if is_instance_valid(old[0]):
+			old[0].queue_free()
+
+func age_killfeed(delta):
+	var i=0
+	while i<feed.size():
+		feed[i][1]-=delta
+		if feed[i][1]<=0:
+			if is_instance_valid(feed[i][0]):
+				feed[i][0].queue_free()
+			feed.remove(i)
+		else:
+			i+=1
+
+#Scoreboard auf TAB, wird nur beim Wechsel neu aufgebaut
+func handle_scoreboard():
+	var want=Input.is_action_pressed('scoreboard')
+	if want==scoreboard_open:
 		return
-	multiplayer.award(id,amount)
-	multiplayer.rset('money',multiplayer.money)
+	scoreboard_open=want
+	$menulayer/scoreboard.visible=want
+	if want:
+		refresh_scoreboard()
+	sync_menu_block()
+
+func score_cell(grid,text,col,width):
+	var l=Label.new()
+	l.text=text
+	l.add_color_override('font_color',col)
+	l.rect_min_size=Vector2(width,0)
+	grid.add_child(l)
+
+func refresh_scoreboard():
+	var grid=$menulayer/scoreboard/grid
+	for c in grid.get_children():
+		grid.remove_child(c)
+		c.free()
+	var head=Color(0.45,0.51,0.57)
+	score_cell(grid,'PLAYER',head,220)
+	score_cell(grid,'K',head,50)
+	score_cell(grid,'D',head,50)
+	score_cell(grid,'A',head,50)
+	score_cell(grid,'MONEY',head,90)
+	for t in [multiplayer.TEAM_T,multiplayer.TEAM_CT]:
+		for x in player_ids():
+			if multiplayer.team_of(x)!=t:
+				continue
+			var col=multiplayer.TEAM_COLORS[t]
+			var p=get_node_or_null(str(x))
+			if p!=null and !p.alive:
+				col=Color(col.r*0.45,col.g*0.45,col.b*0.45)
+			var nm=multiplayer.players[x]
+			if x==get_tree().get_network_unique_id():
+				nm+='  (You)'
+			score_cell(grid,nm,col,220)
+			score_cell(grid,str(multiplayer.stat_of(x,'kills')),col,50)
+			score_cell(grid,str(multiplayer.stat_of(x,'deaths')),col,50)
+			score_cell(grid,str(multiplayer.stat_of(x,'assists')),col,50)
+			score_cell(grid,'$'+str(multiplayer.money_of(x)),col,90)
 
 func check_match_end():
 	var a=multiplayer.score[0]
@@ -385,4 +520,5 @@ func _on_play_pressed():
 		return
 	multiplayer.reset_money()
 	loss_streak=[0,0]
+	rpc('reset_stats')
 	rpc('start_round',multiplayer.teams,[0,0],1)

@@ -21,6 +21,7 @@ The project uses 2 scenes to handle lobby and 1 singleton to manage multiplayer 
 | `1` `2` `3` `4` | Handgun, rifle, shotgun, knife |
 | `M` | Team menu |
 | `B` | Buy menu |
+| `TAB` | Scoreboard (hold) |
 
 The controls screen in the main menu reads the bindings straight out of the
 input map, so it cannot drift away from what the game actually does.
@@ -50,7 +51,18 @@ way Counter-Strike does it.
 
 The HUD follows the same layout: health bottom left, weapon and magazine
 bottom right, the round score in a bar at the top with the team colours, and
-a crosshair in the middle.
+a crosshair in the middle that opens up with your spread.
+
+Hold `TAB` for the scoreboard — kills, deaths, assists and money per player,
+grouped by side, with the dead greyed out. The killfeed in the top right
+names the killer, the weapon and the victim in the killer's team colour.
+
+The radar sits top left over the map's own overview image. Team mates are
+always on it; enemies appear only while you can actually see them, so it
+passes on what you have rather than acting as a wallhack. The kill that
+feeds all of this is decided by the server: the victim remembers who hit it
+and how much, the server picks the killer and hands the assist to whoever
+else did at least 40 damage.
 
 ## Weapons
 

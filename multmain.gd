@@ -67,6 +67,25 @@ func team_count(t):
 			n+=1
 	return n
 
+#Kills, Tode und Assists. Wird ueber death_notice auf allen Peers gleich
+#fortgeschrieben, deshalb kein rset noetig
+var stats={}
+
+func reset_stats():
+	stats={}
+	for x in players:
+		stats[x]={'kills':0,'deaths':0,'assists':0}
+
+func stat_of(id,key):
+	if stats.has(id) and stats[id].has(key):
+		return stats[id][key]
+	return 0
+
+func add_stat(id,key,n):
+	if !stats.has(id):
+		stats[id]={'kills':0,'deaths':0,'assists':0}
+	stats[id][key]+=n
+
 func money_of(id):
 	if money.has(id):
 		return money[id]

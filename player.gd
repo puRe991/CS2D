@@ -20,6 +20,9 @@ var frozen=false
 #Wer zuletzt getroffen hat, damit der Server den Kill verguetet
 var last_hit_by=0
 var last_reward=0
+var last_weapon=''
+#Wer in diesem Leben wie viel Schaden gemacht hat, fuer Assists
+var damagers={}
 
 #Bewegung mit Traegheit. Gegensteuern bremst haerter als Loslassen, das ist
 #der 2D-Gegenwert zum Counter-Strafing
@@ -305,12 +308,17 @@ func owns(w):
 
 #Einziger Weg, wie Leben verloren geht. Panzerung schluckt die Haelfte,
 #bis sie aufgebraucht ist
-func take_damage(dmg,from_id=0,reward=0,armor_pen=0.0):
+func take_damage(dmg,from_id=0,reward=0,armor_pen=0.0,wname=''):
 	if !alive:
 		return
 	if from_id!=0:
 		last_hit_by=from_id
 		last_reward=reward
+		last_weapon=wname
+		if damagers.has(from_id):
+			damagers[from_id]+=dmg
+		else:
+			damagers[from_id]=dmg
 	if armor>0:
 		#Halber Schaden geht in die Weste, Durchschlag verkleinert den Anteil
 		var to_armor=int(dmg*0.5*(1.0-armor_pen))
@@ -341,6 +349,7 @@ sync func fire(spreads,damage):
 		bul.shooter=int(get_name())
 		bul.reward=d['kill_reward']
 		bul.armor_pen=d['armor_pen']
+		bul.wname=weapon
 		bul.falloff_start=d['falloff_start']
 		bul.falloff_end=d['falloff_end']
 		bul.falloff_min=d['falloff_min']
@@ -356,15 +365,15 @@ sync func melee(damage,rng,reward):
 			continue
 		var to=p.global_position-global_position
 		if to.length()<=rng and facing.dot(to.normalized())>0.7:
-			p.take_damage(damage,int(get_name()),reward,weapons.DATA[weapon]['armor_pen'])
+			p.take_damage(damage,int(get_name()),reward,weapons.DATA[weapon]['armor_pen'],weapon)
 
 sync func die():
 	if !alive:
 		return
 	alive=false
-	#Kills verguetet der Server, jeder Peer rechnet Schaden fuer sich
-	if get_tree().is_network_server() and get_parent().has_method('award_kill'):
-		get_parent().award_kill(last_hit_by,last_reward)
+	#Der Server wertet den Tod aus und meldet ihn allen Peers
+	if get_tree().is_network_server() and get_parent().has_method('register_death'):
+		get_parent().register_death(int(get_name()))
 	$body.hide()
 	$feet.hide()
 	$Name.hide()
@@ -382,6 +391,8 @@ sync func respawn(pos):
 	pla=false
 	last_hit_by=0
 	last_reward=0
+	last_weapon=''
+	damagers={}
 	velocity=Vector2(0,0)
 	inaccuracy=0.0
 	shot_index=0
