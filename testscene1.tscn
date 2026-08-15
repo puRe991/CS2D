@@ -316,7 +316,30 @@ position = Vector2( 9329, 4125 )
 
 position = Vector2( 9329, 3165 )
 
-[node name="radar" type="Control" parent="CanvasLayer" index="9"]
+[node name="bombstate" type="Label" parent="CanvasLayer" index="9"]
+
+visible = false
+margin_left = 522.0
+margin_top = 86.0
+margin_right = 800.0
+margin_bottom = 104.0
+rect_scale = Vector2( 1.5, 1.5 )
+mouse_filter = 2
+custom_colors/font_color = Color( 0.95, 0.28, 0.22, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "BOMB PLANTED   40"
+
+[node name="usebar" type="ProgressBar" parent="CanvasLayer" index="10"]
+
+visible = false
+margin_left = 480.0
+margin_top = 430.0
+margin_right = 800.0
+margin_bottom = 452.0
+mouse_filter = 2
+percent_visible = false
+
+[node name="radar" type="Control" parent="CanvasLayer" index="11"]
 
 margin_left = 16.0
 margin_top = 60.0
@@ -325,7 +348,7 @@ margin_bottom = 236.0
 mouse_filter = 2
 script = ExtResource( 4 )
 
-[node name="killfeed" type="VBoxContainer" parent="CanvasLayer" index="10"]
+[node name="killfeed" type="VBoxContainer" parent="CanvasLayer" index="12"]
 
 margin_left = 900.0
 margin_top = 60.0
@@ -335,7 +358,17 @@ mouse_filter = 2
 alignment = 0
 custom_constants/separation = 4
 
-[node name="menulayer" type="CanvasLayer" parent="." index="8"]
+[node name="bombsites" type="Node" parent="." index="8"]
+
+[node name="A" type="Position2D" parent="bombsites" index="0"]
+
+position = Vector2( -911, -3235 )
+
+[node name="B" type="Position2D" parent="bombsites" index="1"]
+
+position = Vector2( 369, 2525 )
+
+[node name="menulayer" type="CanvasLayer" parent="." index="9"]
 
 layer = 10
 

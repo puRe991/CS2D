@@ -10,6 +10,10 @@ var mag={}
 var owned={}
 var nades={}
 var armor=0
+var kit=false
+#Fortschritt beim Pflanzen oder Entschaerfen, 0 wenn nichts laeuft
+var use_progress=0.0
+var use_total=0.0
 
 #Blendung durch eine Flashbang, laeuft nur lokal ab
 var blind_left=0.0
@@ -81,6 +85,8 @@ func reset_loadout():
 	for g in weapons.GRENADE_ORDER:
 		nades[g]=0
 	armor=0
+	kit=false
+	use_progress=0.0
 	blind_left=0.0
 	weapon='handgun'
 

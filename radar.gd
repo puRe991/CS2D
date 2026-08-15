@@ -73,6 +73,18 @@ func _draw():
 	if me==null:
 		return
 
+	#Die Bombe sieht das eigene Team immer, sobald sie liegt oder scharf ist
+	var scene=get_tree().get_root().get_node_or_null("Node2D")
+	if scene!=null and scene.get("bomb")!=null:
+		var b=scene.bomb
+		if b.state!=b.CARRIED:
+			var bp=to_radar(b.global_position,size)
+			if bp.x>=0 and bp.y>=0 and bp.x<=size.x and bp.y<=size.y:
+				var bc=Color(0.75,0.62,0.25,1)
+				if b.state==b.ARMED:
+					bc=Color(0.95,0.25,0.2,1)
+				draw_circle(bp,5.0,bc)
+
 	for p in get_tree().get_nodes_in_group('player'):
 		if !p.alive:
 			continue

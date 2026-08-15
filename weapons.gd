@@ -72,7 +72,8 @@ const SHOP=[
 	{'id':'he','label':'HE GRENADE','cost':300},
 	{'id':'flash','label':'FLASHBANG','cost':200},
 	{'id':'smoke','label':'SMOKE','cost':300},
-	{'id':'molotov','label':'MOLOTOV','cost':400}
+	{'id':'molotov','label':'MOLOTOV','cost':400},
+	{'id':'defusekit','label':'DEFUSE KIT','cost':400,'ct_only':true}
 ]
 
 const ARMOR_FULL=100

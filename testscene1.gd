@@ -8,6 +8,8 @@ const ROUND_TIME=115.0
 const MAX_ROUNDS=30
 const ROUNDS_TO_WIN=16
 const HALFTIME_ROUND=15
+const PLANT_REWARD=300
+const DEFUSE_REWARD=300
 
 var round_active=false
 var restart_in=0.0
@@ -22,6 +24,11 @@ var loss_streak=[0,0]
 var feed=[]
 var scoreboard_open=false
 
+#Bombe
+var bomb=null
+var bomb_planted=false
+var plant_bonus_paid=false
+
 func _ready():
 	if get_tree().is_network_server():
 		multiplayer.reset_money()
@@ -30,6 +37,7 @@ func _ready():
 	update_score()
 	build_buymenu()
 	setup_radar()
+	reset_bomb()
 	begin_freeze()
 
 #Das Radar bekommt die Kartengrenzen aus der Wand-Tilemap
@@ -108,6 +116,38 @@ func local_player():
 	return get_node_or_null(str(get_tree().get_network_unique_id()))
 
 # --- Freeze Time -------------------------------------------------------
+
+func site_positions():
+	var out=[]
+	for c in get_node("bombsites").get_children():
+		out.append(c.global_position)
+	return out
+
+func in_bombsite(pos):
+	for sp in site_positions():
+		if pos.distance_to(sp)<=bomb.SITE_RADIUS:
+			return true
+	return false
+
+#Ein T bekommt die Bombe, die Reihenfolge ist auf allen Peers gleich
+func reset_bomb():
+	bomb_planted=false
+	plant_bonus_paid=false
+	if bomb==null:
+		bomb=load("res://bomb.tscn").instance()
+		add_child(bomb)
+	bomb.state=bomb.DROPPED
+	bomb.carrier=0
+	bomb.timer=0.0
+	for x in player_ids():
+		if multiplayer.team_of(x)==multiplayer.TEAM_T:
+			bomb.give_to(x)
+			var p=get_node_or_null(str(x))
+			if p!=null:
+				bomb.global_position=p.global_position
+			return
+	#Ohne T liegt sie auf dem ersten Spawnpunkt
+	bomb.global_position=spawn_point(multiplayer.TEAM_T,0)
 
 func begin_freeze():
 	freeze_in=FREEZE_TIME
@@ -257,6 +297,8 @@ func refresh_buymenu():
 		if p!=null:
 			if e['id']=='kevlar':
 				have=p.armor>0
+			elif e['id']=='defusekit':
+				have=p.kit
 			elif weapons.is_grenade(e['id']):
 				have=p.nades[e['id']]>=weapons.GRENADES[e['id']]['max']
 			else:
@@ -296,6 +338,9 @@ remote func request_buy(id,item):
 	var buyer=get_node_or_null(str(id))
 	if buyer!=null and weapons.is_grenade(item) and buyer.nades[item]>=weapons.GRENADES[item]['max']:
 		return
+	#Das Entschaerfungsset ist nur fuer die Verteidiger
+	if item=='defusekit' and multiplayer.team_of(id)!=multiplayer.TEAM_CT:
+		return
 	multiplayer.award(id,-e['cost'])
 	multiplayer.rset('money',multiplayer.money)
 	rpc('grant',id,item)
@@ -306,6 +351,8 @@ sync func grant(id,item):
 		return
 	if item=='kevlar':
 		p.armor=weapons.ARMOR_FULL
+	elif item=='defusekit':
+		p.kit=true
 	elif weapons.is_grenade(item):
 		p.nades[item]=p.nades[item]+1
 	else:
@@ -313,6 +360,82 @@ sync func grant(id,item):
 		p.set_weapon(item)
 	if p==local_player() and $menulayer/buymenu.visible:
 		refresh_buymenu()
+
+# --- Bombe -------------------------------------------------------------
+
+#Pflanzen und Entschaerfen laufen lokal als Fortschritt und werden erst beim
+#Abschluss gemeldet
+func handle_use(delta):
+	var me=local_player()
+	if me==null or bomb==null:
+		return
+	if !me.alive or me.frozen or me.menu_open or match_over:
+		me.use_progress=0.0
+		return
+	var holding=Input.is_action_pressed('use')
+	var t=multiplayer.team_of(get_tree().get_network_unique_id())
+
+	if !bomb_planted and t==multiplayer.TEAM_T and bomb.state==bomb.CARRIED and bomb.carrier==int(me.get_name()):
+		if holding and in_bombsite(me.global_position) and me.velocity.length()<40:
+			me.use_total=bomb.PLANT_TIME
+			me.use_progress+=delta
+			if me.use_progress>=bomb.PLANT_TIME:
+				me.use_progress=0.0
+				rpc('plant',int(me.get_name()),me.global_position)
+		else:
+			me.use_progress=0.0
+		return
+
+	if bomb_planted and t==multiplayer.TEAM_CT:
+		var span=bomb.DEFUSE_TIME
+		if me.kit:
+			span=bomb.DEFUSE_TIME_KIT
+		if holding and bomb.can_reach(me) and me.velocity.length()<40:
+			me.use_total=span
+			me.use_progress+=delta
+			if me.use_progress>=span:
+				me.use_progress=0.0
+				rpc('defuse',int(me.get_name()))
+		else:
+			me.use_progress=0.0
+		return
+
+	me.use_progress=0.0
+
+sync func plant(id,pos):
+	bomb_planted=true
+	bomb.global_position=pos
+	bomb.arm()
+	$CanvasLayer/bombstate.show()
+	if get_tree().is_network_server() and !plant_bonus_paid:
+		plant_bonus_paid=true
+		multiplayer.award(id,PLANT_REWARD)
+		multiplayer.rset('money',multiplayer.money)
+
+sync func defuse(id):
+	if !bomb_planted:
+		return
+	bomb_planted=false
+	bomb.state=bomb.DROPPED
+	$CanvasLayer/bombstate.hide()
+	if get_tree().is_network_server():
+		multiplayer.award(id,DEFUSE_REWARD)
+		multiplayer.rset('money',multiplayer.money)
+		rpc('end_round',multiplayer.TEAM_CT)
+
+func update_bomb_hud():
+	var me=local_player()
+	var bar=$CanvasLayer/usebar
+	if me!=null and me.use_progress>0.0 and me.use_total>0.0:
+		bar.show()
+		bar.value=100.0*me.use_progress/me.use_total
+	else:
+		bar.hide()
+	if bomb_planted and bomb!=null:
+		$CanvasLayer/bombstate.text='BOMB PLANTED   '+str(int(ceil(bomb.timer)))
+		$CanvasLayer/bombstate.show()
+	else:
+		$CanvasLayer/bombstate.hide()
 
 # --- Runde -------------------------------------------------------------
 
@@ -324,6 +447,8 @@ func _process(delta):
 	handle_scoreboard()
 	age_killfeed(delta)
 	update_sight()
+	handle_use(delta)
+	update_bomb_hud()
 	if scoreboard_open:
 		refresh_scoreboard()
 
@@ -345,8 +470,14 @@ func _process(delta):
 	update_timer_hud()
 	if !get_tree().is_network_server():
 		return
-	#Laeuft die Zeit ab, geht die Runde an die Verteidiger
-	if round_left<=0:
+
+	#Nach dem Plant zaehlt nur noch die Bombenuhr
+	if bomb_planted:
+		if bomb.timer<=0.0:
+			rpc('explode')
+			return
+	elif round_left<=0:
+		#Zeit abgelaufen ohne Plant, die Verteidiger halten
 		rpc('end_round',multiplayer.TEAM_CT)
 		return
 
@@ -356,6 +487,9 @@ func _process(delta):
 			alive[p.team]+=1
 	if alive[0]>0 and alive[1]>0:
 		return
+	#Eine gelegte Bombe laeuft weiter, auch wenn kein T mehr steht
+	if alive[0]==0 and bomb_planted:
+		return
 
 	var winner=-1
 	if alive[0]>0:
@@ -363,6 +497,13 @@ func _process(delta):
 	elif alive[1]>0:
 		winner=multiplayer.TEAM_CT
 	rpc('end_round',winner)
+
+sync func explode():
+	bomb_planted=false
+	if bomb!=null:
+		bomb.state=bomb.DROPPED
+	$CanvasLayer/bombstate.hide()
+	end_round(multiplayer.TEAM_T)
 
 sync func reset_stats():
 	multiplayer.reset_stats()
@@ -578,6 +719,8 @@ sync func start_round(teams,score,rno):
 		used[t]+=1
 	round_active=both_teams_manned()
 	update_score()
+	reset_bomb()
+	$CanvasLayer/bombstate.hide()
 	begin_freeze()
 
 #Neues Match, nur der Server

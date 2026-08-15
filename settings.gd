@@ -60,7 +60,8 @@ const KEY_ROWS=[
 	['nade_he','HE grenade'],
 	['nade_flash','Flashbang'],
 	['nade_smoke','Smoke'],
-	['nade_molotov','Molotov']
+	['nade_molotov','Molotov'],
+	['use','Plant / defuse (hold)']
 ]
 
 func binding_text(action):

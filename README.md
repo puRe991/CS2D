@@ -23,6 +23,7 @@ The project uses 2 scenes to handle lobby and 1 singleton to manage multiplayer 
 | `B` | Buy menu |
 | `TAB` | Scoreboard (hold) |
 | `G` `F` `C` `V` | Throw HE, flashbang, smoke, molotov |
+| `E` | Plant or defuse the bomb (hold, standing still) |
 
 The controls screen in the main menu reads the bindings straight out of the
 input map, so it cannot drift away from what the game actually does.
@@ -103,6 +104,25 @@ Players are split into `T` and `CT`. The server balances the teams as people
 join and is the only one that decides, clients only ask; use the Switch Team
 button in the lobby. Team mates cannot damage each other, and each team has
 its own base to spawn in.
+
+## The bomb
+
+One T carries the C4 at the start of a round; if that player dies it stays
+where they fell. Standing still inside one of the two bombsites and holding
+`E` plants it in 3.2 seconds. After that the round timer stops deciding
+anything and the bomb's own 40 second countdown takes over. A CT holding `E`
+next to it defuses in 10 seconds, or 5 with a defuse kit, which only the CT
+side can buy.
+
+That gives the round its real endings:
+
+| | |
+| --- | --- |
+| T win | every CT dead, or the bomb explodes |
+| CT win | every T dead while the bomb is not planted, the bomb is defused, or time runs out without a plant |
+
+A planted bomb keeps the round alive even with no T left standing. Planting
+pays the planter $300, defusing pays the defuser the same.
 
 ## Match format
 
