@@ -47,11 +47,32 @@ const ORDER=['handgun','rifle','shotgun','knife']
 #Pistole und Messer hat jeder, der Rest wird gekauft
 const FREE=['handgun','knife']
 
+#Granaten sind keine Waffen: sie werden geworfen ohne die Waffe zu wechseln,
+#weil es fuer sie keine Animationen im Spriteset gibt
+const GRENADES={
+	'he':{'label':'HE GRENADE','cost':300,'key':'nade_he','fuse':1.6,'radius':420.0,'damage':98,'max':1,'reward':300},
+	'flash':{'label':'FLASHBANG','cost':200,'key':'nade_flash','fuse':1.4,'radius':950.0,'damage':0,'max':2,'reward':0},
+	'smoke':{'label':'SMOKE','cost':300,'key':'nade_smoke','fuse':1.6,'radius':520.0,'damage':0,'max':1,'reward':0},
+	'molotov':{'label':'MOLOTOV','cost':400,'key':'nade_molotov','fuse':1.8,'radius':360.0,'damage':11,'max':1,'reward':300}
+}
+const GRENADE_ORDER=['he','flash','smoke','molotov']
+
+const SMOKE_LIFE=15.0
+const FIRE_LIFE=7.0
+const FIRE_TICK=0.4
+
+func is_grenade(id):
+	return GRENADES.has(id)
+
 #Reihenfolge bestimmt die Zeilen im Kaufmenue
 const SHOP=[
 	{'id':'rifle','label':'RIFLE','cost':2700},
 	{'id':'shotgun','label':'SHOTGUN','cost':1200},
-	{'id':'kevlar','label':'KEVLAR VEST','cost':650}
+	{'id':'kevlar','label':'KEVLAR VEST','cost':650},
+	{'id':'he','label':'HE GRENADE','cost':300},
+	{'id':'flash','label':'FLASHBANG','cost':200},
+	{'id':'smoke','label':'SMOKE','cost':300},
+	{'id':'molotov','label':'MOLOTOV','cost':400}
 ]
 
 const ARMOR_FULL=100

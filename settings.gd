@@ -56,7 +56,11 @@ const KEY_ROWS=[
 	['weapon_4','Knife'],
 	['teammenu','Team menu'],
 	['buymenu','Buy menu'],
-	['scoreboard','Scoreboard']
+	['scoreboard','Scoreboard'],
+	['nade_he','HE grenade'],
+	['nade_flash','Flashbang'],
+	['nade_smoke','Smoke'],
+	['nade_molotov','Molotov']
 ]
 
 func binding_text(action):

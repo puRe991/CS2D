@@ -22,6 +22,7 @@ The project uses 2 scenes to handle lobby and 1 singleton to manage multiplayer 
 | `M` | Team menu |
 | `B` | Buy menu |
 | `TAB` | Scoreboard (hold) |
+| `G` `F` `C` `V` | Throw HE, flashbang, smoke, molotov |
 
 The controls screen in the main menu reads the bindings straight out of the
 input map, so it cannot drift away from what the game actually does.
@@ -125,6 +126,27 @@ gone again when the round ends. Everyone always carries a handgun and a
 knife; the rifle, the shotgun and the kevlar vest have to be bought, and a
 weapon you have not bought cannot be selected with the number keys. Kevlar
 soaks up half of the incoming damage until it is used up.
+
+### Grenades
+
+Grenades are not weapons here — the sprite set has no throwing animation, so
+they fly on their own key and leave the weapon in your hands. Buy them like
+anything else; you can carry one HE, one smoke, one molotov and two
+flashbangs.
+
+| Grenade | Key | Cost | Effect |
+| --- | --- | --- | --- |
+| HE | `G` | $300 | Damage falling off to nothing at the edge, walls shield |
+| Flashbang | `F` | $200 | Blinds by distance and by how far you are turned towards it |
+| Smoke | `C` | $300 | Blocks sight for 15 seconds |
+| Molotov | `V` | $400 | Burns anyone standing in it for 7 seconds |
+
+They bounce off walls on their own maths rather than a physics material, so
+they behave the same on any Godot version.
+
+The smoke really blocks sight: enemies whose line to you crosses the cloud
+disappear from your screen and from your radar. That is checked against the
+cloud as a circle, so it works no matter what order things are drawn in.
 
 Money follows Counter-Strike as well: you start on $800 and cannot hold more
 than $16000. Winning a round pays $3250. Losing pays $1400 and climbs to

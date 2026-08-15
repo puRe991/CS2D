@@ -84,6 +84,26 @@ func both_teams_manned():
 func update_score():
 	$CanvasLayer/score.text=str(multiplayer.score[0])+'  :  '+str(multiplayer.score[1])
 
+#Rauch zwischen zwei Punkten? Wird vom Radar und der Sichtbarkeit genutzt
+func sight_blocked(a,b):
+	for c in get_tree().get_nodes_in_group('smoke'):
+		if c.blocks(a,b):
+			return true
+	return false
+
+#Gegner im Rauch verschwinden lokal aus dem Bild
+func update_sight():
+	var me=local_player()
+	if me==null:
+		return
+	for p in get_tree().get_nodes_in_group('player'):
+		if p==me or !p.alive:
+			continue
+		var hidden=(p.team!=me.team) and sight_blocked(me.global_position,p.global_position)
+		p.get_node("body").visible=!hidden
+		p.get_node("feet").visible=!hidden
+		p.get_node("Name").visible=!hidden
+
 func local_player():
 	return get_node_or_null(str(get_tree().get_network_unique_id()))
 
@@ -153,11 +173,58 @@ func _on_pick_ct_pressed():
 
 # --- Kaufmenue ---------------------------------------------------------
 
+#Zeilen werden erzeugt, damit neue Artikel im Shop nicht jedes Mal auch
+#noch Knoten in der Szene brauchen
+var buy_rows=[]
+
+func flat(bg,border):
+	var sb=StyleBoxFlat.new()
+	sb.bg_color=bg
+	sb.border_width_left=1
+	sb.border_width_top=1
+	sb.border_width_right=1
+	sb.border_width_bottom=1
+	sb.border_color=border
+	return sb
+
 func build_buymenu():
+	var list=$menulayer/buymenu/list
+	for c in list.get_children():
+		list.remove_child(c)
+		c.free()
+	buy_rows=[]
 	for i in range(weapons.SHOP.size()):
 		var e=weapons.SHOP[i]
-		$menulayer/buymenu.get_node('name_'+str(i)).text=e['label']
-		$menulayer/buymenu.get_node('price_'+str(i)).text='$'+str(e['cost'])
+		var row=HBoxContainer.new()
+		row.rect_min_size=Vector2(0,40)
+		list.add_child(row)
+
+		var nm=Label.new()
+		nm.text=e['label']
+		nm.rect_min_size=Vector2(240,0)
+		nm.add_color_override('font_color',Color(0.88,0.9,0.93))
+		row.add_child(nm)
+
+		var pr=Label.new()
+		pr.text='$'+str(e['cost'])
+		pr.rect_min_size=Vector2(90,0)
+		pr.add_color_override('font_color',Color(0.87,0.62,0.15))
+		row.add_child(pr)
+
+		var b=Button.new()
+		b.text='BUY'
+		b.rect_min_size=Vector2(136,34)
+		b.add_stylebox_override('normal',flat(Color(0.16,0.13,0.07),Color(0.87,0.62,0.15)))
+		b.add_stylebox_override('hover',flat(Color(0.87,0.62,0.15),Color(0.96,0.71,0.23)))
+		b.add_stylebox_override('pressed',flat(Color(0.87,0.62,0.15),Color(0.96,0.71,0.23)))
+		b.add_stylebox_override('disabled',flat(Color(0.11,0.12,0.14),Color(0.22,0.25,0.29)))
+		b.add_color_override('font_color',Color(0.87,0.62,0.15))
+		b.add_color_override('font_color_hover',Color(0.06,0.07,0.09))
+		b.add_color_override('font_color_pressed',Color(0.06,0.07,0.09))
+		b.add_color_override('font_color_disabled',Color(0.4,0.45,0.52))
+		b.connect('pressed',self,'buy',[i])
+		row.add_child(b)
+		buy_rows.append(b)
 
 func toggle_buymenu():
 	var menu=$menulayer/buymenu
@@ -185,11 +252,13 @@ func refresh_buymenu():
 	$menulayer/buymenu/cash.text='$'+str(cash)
 	for i in range(weapons.SHOP.size()):
 		var e=weapons.SHOP[i]
-		var b=$menulayer/buymenu.get_node('buy_'+str(i))
+		var b=buy_rows[i]
 		var have=false
 		if p!=null:
 			if e['id']=='kevlar':
 				have=p.armor>0
+			elif weapons.is_grenade(e['id']):
+				have=p.nades[e['id']]>=weapons.GRENADES[e['id']]['max']
 			else:
 				have=p.owns(e['id'])
 		if have:
@@ -213,15 +282,6 @@ func buy(i):
 		rpc_id(1,'request_buy',id,weapons.SHOP[i]['id'])
 	refresh_buymenu()
 
-func _on_buy_0_pressed():
-	buy(0)
-
-func _on_buy_1_pressed():
-	buy(1)
-
-func _on_buy_2_pressed():
-	buy(2)
-
 #Kaufen entscheidet der Server, der Client fragt nur an
 remote func request_buy(id,item):
 	if !get_tree().is_network_server():
@@ -233,6 +293,9 @@ remote func request_buy(id,item):
 		return
 	if multiplayer.money_of(id)<e['cost']:
 		return
+	var buyer=get_node_or_null(str(id))
+	if buyer!=null and weapons.is_grenade(item) and buyer.nades[item]>=weapons.GRENADES[item]['max']:
+		return
 	multiplayer.award(id,-e['cost'])
 	multiplayer.rset('money',multiplayer.money)
 	rpc('grant',id,item)
@@ -243,6 +306,8 @@ sync func grant(id,item):
 		return
 	if item=='kevlar':
 		p.armor=weapons.ARMOR_FULL
+	elif weapons.is_grenade(item):
+		p.nades[item]=p.nades[item]+1
 	else:
 		p.owned[item]=true
 		p.set_weapon(item)
@@ -258,6 +323,7 @@ func _process(delta):
 		toggle_buymenu()
 	handle_scoreboard()
 	age_killfeed(delta)
+	update_sight()
 	if scoreboard_open:
 		refresh_scoreboard()
 

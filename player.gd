@@ -8,7 +8,12 @@ export var health = 100
 var weapon='handgun'
 var mag={}
 var owned={}
+var nades={}
 var armor=0
+
+#Blendung durch eine Flashbang, laeuft nur lokal ab
+var blind_left=0.0
+var blind_total=1.0
 var alive=true
 var team=0
 var reloading=false
@@ -72,7 +77,11 @@ func reset_loadout():
 	for w in weapons.ORDER:
 		mag[w]=weapons.DATA[w]['mag']
 		owned[w]=weapons.FREE.has(w)
+	nades={}
+	for g in weapons.GRENADE_ORDER:
+		nades[g]=0
 	armor=0
+	blind_left=0.0
 	weapon='handgun'
 
 func delrest():
@@ -100,6 +109,13 @@ func _process(delta):
 		$CanvasLayer/armor_value.text=str(armor)
 		$CanvasLayer/money.text='$'+str(multiplayer.money_of(int(get_name())))
 		$CanvasLayer/bullets.text=ammo_text()
+		$CanvasLayer/nades.text=nade_text()
+		var f=$CanvasLayer/flash
+		if blind_left>0.0:
+			f.show()
+			f.color=Color(1,1,1,blind_left/blind_total)
+		else:
+			f.hide()
 		$CanvasLayer/crosshair.visible=settings.crosshair and alive and !menu_open
 		if $CanvasLayer/crosshair.visible:
 			update_crosshair()
@@ -108,6 +124,20 @@ func _process(delta):
 			$CanvasLayer/fps.text=str(Engine.get_frames_per_second())+' FPS'
 		if alive and health<=0:
 			rpc('die')
+
+func nade_text():
+	var out=''
+	for g in weapons.GRENADE_ORDER:
+		if nades.has(g) and nades[g]>0:
+			out+=g.to_upper()+' '+str(nades[g])+'   '
+	return out
+
+sync func blind(seconds):
+	if seconds<=0.05:
+		return
+	if seconds>blind_left:
+		blind_left=seconds
+		blind_total=seconds
 
 func ammo_text():
 	if weapons.is_melee(weapon):
@@ -181,9 +211,15 @@ func _physics_process(delta):
 			else:
 				animate_body(weapon+'-move')
 
+		if blind_left>0.0:
+			blind_left-=delta
+			if blind_left<0.0:
+				blind_left=0.0
+
 		handle_weapon_switch()
 		handle_attack()
 		handle_reload()
+		handle_grenades()
 
 		rpos=position
 		rrot=rotation
@@ -292,6 +328,22 @@ func handle_attack():
 		since_shot=0.0
 		rpc('fire',spreads,d['damage'])
 
+#Granaten wechseln die Waffe nicht, sie fliegen auf Tastendruck
+func handle_grenades():
+	if pla or menu_open or frozen:
+		return
+	for g in weapons.GRENADE_ORDER:
+		if nades.has(g) and nades[g]>0 and Input.is_action_just_pressed(weapons.GRENADES[g]['key']):
+			nades[g]-=1
+			rpc('throw_nade',g,rotation)
+			return
+
+sync func throw_nade(kind,angle):
+	var n=load("res://grenade.tscn").instance()
+	get_parent().add_child(n)
+	n.global_position=$firepoint.global_position
+	n.setup(kind,team,int(get_name()),Vector2(cos(angle),sin(angle))*1250.0)
+
 func handle_reload():
 	if pla or menu_open or frozen or weapons.is_melee(weapon):
 		return
@@ -393,6 +445,7 @@ sync func respawn(pos):
 	last_reward=0
 	last_weapon=''
 	damagers={}
+	blind_left=0.0
 	velocity=Vector2(0,0)
 	inaccuracy=0.0
 	shot_index=0

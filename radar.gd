@@ -49,7 +49,13 @@ func spotted(me,other):
 	var to=other.global_position-me.global_position
 	if to.length()>SIGHT_RANGE:
 		return false
-	return Vector2(cos(me.rotation),sin(me.rotation)).dot(to.normalized())>SIGHT_DOT
+	if Vector2(cos(me.rotation),sin(me.rotation)).dot(to.normalized())<=SIGHT_DOT:
+		return false
+	#Rauch nimmt dem Radar die Information genauso wie dem Auge
+	var scene=get_tree().get_root().get_node_or_null("Node2D")
+	if scene!=null and scene.has_method('sight_blocked'):
+		return !scene.sight_blocked(me.global_position,other.global_position)
+	return true
 
 func _draw():
 	var size=get_rect().size
