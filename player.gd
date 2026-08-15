@@ -7,9 +7,19 @@ export var health = 100
 
 var weapon='handgun'
 var mag={}
+var owned={}
+var armor=0
 var alive=true
 var team=0
 var reloading=false
+
+#Waehrend der Freeze Time am Rundenanfang darf gezielt und gekauft, aber
+#nicht gelaufen oder geschossen werden
+var frozen=false
+
+#Wer zuletzt getroffen hat, damit der Server den Kill verguetet
+var last_hit_by=0
+var last_reward=0
 
 #Wird vom Touch Joystick (CanvasLayer/Joystick/joytop) gesetzt
 var touch_dir=Vector2(0,0)
@@ -40,8 +50,15 @@ func _ready():
 	#Alle Spieler teilen sich die Frames aus dem weapons-Singleton
 	$body.frames=weapons.body_frames
 	$body.animation=weapon+'-idle'
+	reset_loadout()
+
+func reset_loadout():
+	owned={}
 	for w in weapons.ORDER:
 		mag[w]=weapons.DATA[w]['mag']
+		owned[w]=weapons.FREE.has(w)
+	armor=0
+	weapon='handgun'
 
 func delrest():
 	if get_name()!=str(get_tree().get_network_unique_id()):
@@ -65,6 +82,8 @@ func _process(delta):
 	if is_network_master():
 		$CanvasLayer/hp.value=health
 		$CanvasLayer/hp_value.text=str(max(0,health))
+		$CanvasLayer/armor_value.text=str(armor)
+		$CanvasLayer/money.text='$'+str(multiplayer.money_of(int(get_name())))
 		$CanvasLayer/bullets.text=ammo_text()
 		$CanvasLayer/crosshair.visible=settings.crosshair and alive and !menu_open
 		$CanvasLayer/fps.visible=settings.show_fps
@@ -90,7 +109,7 @@ func aim():
 
 #WASD, faellt auf den Joystick zurueck solange keine Taste gedrueckt ist
 func input_direction():
-	if menu_open:
+	if menu_open or frozen:
 		return Vector2(0,0)
 	var dir=Vector2(0,0)
 	if Input.is_action_pressed('right'):
@@ -158,12 +177,12 @@ func handle_weapon_switch():
 	if pla or menu_open:
 		return
 	for w in weapons.ORDER:
-		if w!=weapon and Input.is_action_just_pressed(weapons.slot_action(w)):
+		if w!=weapon and owns(w) and Input.is_action_just_pressed(weapons.slot_action(w)):
 			rpc('set_weapon',w)
 			return
 
 func handle_attack():
-	if pla or menu_open:
+	if pla or menu_open or frozen:
 		return
 	var d=weapons.DATA[weapon]
 	var pressed=false
@@ -176,7 +195,7 @@ func handle_attack():
 	if weapons.is_melee(weapon):
 		pla=true
 		animate_body(weapon+'-meleeattack',true)
-		rpc('melee',d['damage'],d['range'])
+		rpc('melee',d['damage'],d['range'],d['kill_reward'])
 	elif mag[weapon]>0:
 		mag[weapon]-=1
 		pla=true
@@ -187,7 +206,7 @@ func handle_attack():
 		rpc('fire',spreads,d['damage'])
 
 func handle_reload():
-	if pla or menu_open or weapons.is_melee(weapon):
+	if pla or menu_open or frozen or weapons.is_melee(weapon):
 		return
 	if !Input.is_action_just_pressed('reload'):
 		return
@@ -196,6 +215,25 @@ func handle_reload():
 	reloading=true
 	pla=true
 	animate_body(weapon+'-reload',true)
+
+func owns(w):
+	return owned.has(w) and owned[w]
+
+#Einziger Weg, wie Leben verloren geht. Panzerung schluckt die Haelfte,
+#bis sie aufgebraucht ist
+func take_damage(dmg,from_id=0,reward=0):
+	if !alive:
+		return
+	if from_id!=0:
+		last_hit_by=from_id
+		last_reward=reward
+	if armor>0:
+		var to_armor=int(dmg*0.5)
+		if to_armor>armor:
+			to_armor=armor
+		armor-=to_armor
+		dmg-=to_armor
+	health-=dmg
 
 sync func set_weapon(w):
 	#Laedt die Frames auch bei den anderen Peers, die spielen die Animation ab
@@ -212,23 +250,28 @@ sync func fire(spreads,damage):
 		get_parent().add_child(bul)
 		bul.damage=damage
 		bul.team=team
+		bul.shooter=int(get_name())
+		bul.reward=weapons.DATA[weapon]['kill_reward']
 		bul.global_rotation=a
 		bul.global_position=$firepoint.global_position
 		bul.apply_impulse(Vector2(0,0),Vector2(cos(a),sin(a))*2000)
 
-sync func melee(damage,rng):
+sync func melee(damage,rng,reward):
 	var facing=Vector2(cos(rotation),sin(rotation))
 	for p in get_tree().get_nodes_in_group('player'):
 		if p==self or !p.alive or p.team==team:
 			continue
 		var to=p.global_position-global_position
 		if to.length()<=rng and facing.dot(to.normalized())>0.7:
-			p.health-=damage
+			p.take_damage(damage,int(get_name()),reward)
 
 sync func die():
 	if !alive:
 		return
 	alive=false
+	#Kills verguetet der Server, jeder Peer rechnet Schaden fuer sich
+	if get_tree().is_network_server() and get_parent().has_method('award_kill'):
+		get_parent().award_kill(last_hit_by,last_reward)
 	$body.hide()
 	$feet.hide()
 	$Name.hide()
@@ -242,11 +285,11 @@ sync func respawn(pos):
 	#Ein Teamwechsel aus dem M-Menue wird erst hier wirksam
 	team=multiplayer.team_of(int(get_name()))
 	$Name.add_color_override('font_color',multiplayer.TEAM_COLORS[team])
-	weapon='handgun'
 	reloading=false
 	pla=false
-	for w in weapons.ORDER:
-		mag[w]=weapons.DATA[w]['mag']
+	last_hit_by=0
+	last_reward=0
+	reset_loadout()
 	set_collision_layer(col_layer)
 	set_collision_mask(col_mask)
 	position=pos

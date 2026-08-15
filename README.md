@@ -20,6 +20,7 @@ The project uses 2 scenes to handle lobby and 1 singleton to manage multiplayer 
 | `Shift` | Walk (slower) |
 | `1` `2` `3` `4` | Handgun, rifle, shotgun, knife |
 | `M` | Team menu |
+| `B` | Buy menu |
 
 The controls screen in the main menu reads the bindings straight out of the
 input map, so it cannot drift away from what the game actually does.
@@ -72,12 +73,39 @@ join and is the only one that decides, clients only ask; use the Switch Team
 button in the lobby. Team mates cannot damage each other, and each team has
 its own base to spawn in.
 
-A round ends when one team has no one left standing. The winning team scores,
-the result is shown for four seconds and then everybody respawns with full
-health and a fresh handgun. The score sits at the top of the screen.
+## Match format
 
-Note that damage is still evaluated by each peer for itself, so the round
-result is only as trustworthy as the clients are.
+The match follows Counter-Strike's competitive format:
+
+| | |
+| --- | --- |
+| Rounds | 30, first team to 16 wins |
+| Halftime | after round 15, sides swap and the score goes with the players |
+| Freeze time | 10 seconds at the spawn, aim and buy but do not move |
+| Round time | 1:55 — if it runs out the CT side takes the round |
+| Round end | 7 seconds before the next round starts |
+
+At 15:15 the match is a draw. When a match is over the host gets a button to
+start a new one, which resets score, rounds and money.
+
+## Money and the buy menu
+
+`B` opens the buy menu. You can only buy during the freeze time, and gear is
+gone again when the round ends. Everyone always carries a handgun and a
+knife; the rifle, the shotgun and the kevlar vest have to be bought, and a
+weapon you have not bought cannot be selected with the number keys. Kevlar
+soaks up half of the incoming damage until it is used up.
+
+Money follows Counter-Strike as well: you start on $800 and cannot hold more
+than $16000. Winning a round pays $3250. Losing pays $1400 and climbs to
+$1900, $2400, $2900 and $3400 while the losing streak lasts, and drops back
+one step for every round the team wins. A kill pays what the weapon is
+worth: $300 for the handgun and the rifle, $900 for the shotgun and $1500
+for the knife.
+
+Note that damage is still evaluated by each peer for itself, so round
+results, kill rewards and the score are only as trustworthy as the clients
+are.
 
 ### Testing
 

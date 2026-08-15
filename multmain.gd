@@ -3,6 +3,14 @@ extends Node
 remote var players={}
 remote var teams={}
 remote var score=[0,0]
+remote var money={}
+
+const START_MONEY=800
+const WIN_REWARD=3250
+const MAX_MONEY=16000
+
+#Verlustbonus steigt mit jeder Niederlage in Folge, wie in CS2
+const LOSS_BONUS=[1400,1900,2400,2900,3400]
 
 var self_name
 
@@ -58,6 +66,24 @@ func team_count(t):
 		if teams[x]==t:
 			n+=1
 	return n
+
+func money_of(id):
+	if money.has(id):
+		return money[id]
+	return 0
+
+#Nur der Server ruft das, danach geht die Liste an alle
+func reset_money():
+	money={}
+	for x in players:
+		money[x]=START_MONEY
+	rset('money',money)
+
+func award(id,amount):
+	var m=money_of(id)+amount
+	if m>MAX_MONEY:
+		m=MAX_MONEY
+	money[id]=m
 
 remote func add_player(id,name_i):
 	if get_tree().is_network_server():

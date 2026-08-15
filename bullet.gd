@@ -3,6 +3,8 @@ extends RigidBody2D
 #Werden vom Schuetzen beim Spawnen gesetzt
 var damage=10
 var team=-1
+var shooter=0
+var reward=0
 
 func _ready():
 	pass
@@ -14,7 +16,7 @@ func _process(delta):
 	#Trifft Waende genauso wie Spieler, in beiden Faellen ist die Kugel weg
 	for b in bodies:
 		if b.is_in_group('player') and b.alive and b.team!=team:
-			b.health-=damage
+			b.take_damage(damage,shooter,reward)
 	queue_free()
 
 sync func del():
