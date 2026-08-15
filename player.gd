@@ -21,6 +21,18 @@ var frozen=false
 var last_hit_by=0
 var last_reward=0
 
+#Bewegung mit Traegheit. Gegensteuern bremst haerter als Loslassen, das ist
+#der 2D-Gegenwert zum Counter-Strafing
+const ACCEL=6000.0
+const FRICTION=4500.0
+const COUNTER_ACCEL=11000.0
+var velocity=Vector2(0,0)
+
+#Streuung waechst mit jedem Schuss und faellt in der Feuerpause zurueck
+var inaccuracy=0.0
+var shot_index=0
+var since_shot=9.0
+
 #Wird vom Touch Joystick (CanvasLayer/Joystick/joytop) gesetzt
 var touch_dir=Vector2(0,0)
 var touch_active=false
@@ -86,6 +98,8 @@ func _process(delta):
 		$CanvasLayer/money.text='$'+str(multiplayer.money_of(int(get_name())))
 		$CanvasLayer/bullets.text=ammo_text()
 		$CanvasLayer/crosshair.visible=settings.crosshair and alive and !menu_open
+		if $CanvasLayer/crosshair.visible:
+			update_crosshair()
 		$CanvasLayer/fps.visible=settings.show_fps
 		if settings.show_fps:
 			$CanvasLayer/fps.text=str(Engine.get_frames_per_second())+' FPS'
@@ -134,16 +148,20 @@ func _physics_process(delta):
 
 		var direction=input_direction()
 		var walking=Input.is_action_pressed('walk')
+		var top=speed_run
 		if walking:
-			move_and_slide(direction*speed_walk)
-		else:
-			move_and_slide(direction*speed_run)
+			top=speed_walk
+		top*=weapons.DATA[weapon]['move_speed']
+		apply_movement(direction,top,delta)
+		recover_accuracy(delta)
 
-		if direction==Vector2(0,0):
+		#Animationen folgen der tatsaechlichen Geschwindigkeit, nicht der
+		#Taste, sonst sieht man das Ausgleiten nicht
+		if velocity.length()<40:
 			animate_feet('idle')
 		else:
 			#Laufrichtung relativ zur Blickrichtung, x=vorwaerts y=rechts
-			var local=direction.rotated(-rotation)
+			var local=velocity.rotated(-rotation)
 			if abs(local.y)>abs(local.x):
 				if local.y>0:
 					animate_feet('strafe-right')
@@ -155,7 +173,7 @@ func _physics_process(delta):
 				animate_feet('run')
 
 		if !pla:
-			if direction==Vector2(0,0):
+			if velocity.length()<40:
 				animate_body(weapon+'-idle')
 			else:
 				animate_body(weapon+'-move')
@@ -172,6 +190,67 @@ func _physics_process(delta):
 	else:
 		rotation=rrot
 		position=rpos
+
+#Das Fadenkreuz geht auf, wenn die Streuung waechst. Damit sieht man beim
+#Laufen und im Dauerfeuer sofort, wie ungenau man gerade ist
+func update_crosshair():
+	var gap=5.0+current_spread()*220.0
+	var ch=$CanvasLayer/crosshair
+	ch.get_node("up").margin_top=-(gap+10.0)
+	ch.get_node("up").margin_bottom=-gap
+	ch.get_node("down").margin_top=gap
+	ch.get_node("down").margin_bottom=gap+10.0
+	ch.get_node("left").margin_left=-(gap+10.0)
+	ch.get_node("left").margin_right=-gap
+	ch.get_node("right").margin_left=gap
+	ch.get_node("right").margin_right=gap+10.0
+
+func apply_movement(wish,top,delta):
+	var target=wish*top
+	var accel=ACCEL
+	if wish==Vector2(0,0):
+		accel=FRICTION
+	elif velocity.length()>1 and wish.dot(velocity.normalized())<0:
+		accel=COUNTER_ACCEL
+	var diff=target-velocity
+	var step=accel*delta
+	if diff.length()<=step:
+		velocity=target
+	else:
+		velocity+=diff.normalized()*step
+	velocity=move_and_slide(velocity)
+
+func recover_accuracy(delta):
+	var d=weapons.DATA[weapon]
+	since_shot+=delta
+	if inaccuracy>0:
+		inaccuracy-=d['recover']*delta
+		if inaccuracy<0:
+			inaccuracy=0
+	#Nach einer Feuerpause faengt das Spraymuster von vorn an
+	if since_shot>0.35:
+		shot_index=0
+
+#Stillstehen und der erste Schuss sind praezise, Laufen und Dauerfeuer nicht
+func current_spread():
+	var d=weapons.DATA[weapon]
+	var frac=velocity.length()/speed_run
+	if frac>1.0:
+		frac=1.0
+	var sp=d['spread']+inaccuracy+d['move_penalty']*frac
+	if sp>d['max_spread'] and d['max_spread']>0:
+		sp=d['max_spread']
+	return sp
+
+#Das Spraymuster ist fest, der Spieler kann es lernen und ausgleichen
+func pattern_offset():
+	var pat=weapons.DATA[weapon]['pattern']
+	if pat.empty():
+		return 0.0
+	var i=shot_index
+	if i>=pat.size():
+		i=pat.size()-1
+	return pat[i]
 
 func handle_weapon_switch():
 	if pla or menu_open:
@@ -200,9 +279,14 @@ func handle_attack():
 		mag[weapon]-=1
 		pla=true
 		animate_body(weapon+'-shoot',true)
+		var sp=current_spread()
+		var kick=pattern_offset()
 		var spreads=[]
 		for i in range(d['pellets']):
-			spreads.append(rand_range(-d['spread'],d['spread']))
+			spreads.append(kick+rand_range(-sp,sp))
+		inaccuracy+=d['recoil']
+		shot_index+=1
+		since_shot=0.0
 		rpc('fire',spreads,d['damage'])
 
 func handle_reload():
@@ -221,14 +305,15 @@ func owns(w):
 
 #Einziger Weg, wie Leben verloren geht. Panzerung schluckt die Haelfte,
 #bis sie aufgebraucht ist
-func take_damage(dmg,from_id=0,reward=0):
+func take_damage(dmg,from_id=0,reward=0,armor_pen=0.0):
 	if !alive:
 		return
 	if from_id!=0:
 		last_hit_by=from_id
 		last_reward=reward
 	if armor>0:
-		var to_armor=int(dmg*0.5)
+		#Halber Schaden geht in die Weste, Durchschlag verkleinert den Anteil
+		var to_armor=int(dmg*0.5*(1.0-armor_pen))
 		if to_armor>armor:
 			to_armor=armor
 		armor-=to_armor
@@ -241,9 +326,12 @@ sync func set_weapon(w):
 	weapon=w
 	reloading=false
 	pla=false
+	inaccuracy=0.0
+	shot_index=0
 	body_state=''
 
 sync func fire(spreads,damage):
+	var d=weapons.DATA[weapon]
 	for s in spreads:
 		var a=rotation+s
 		var bul=multiplayer.bullet.instance()
@@ -251,7 +339,12 @@ sync func fire(spreads,damage):
 		bul.damage=damage
 		bul.team=team
 		bul.shooter=int(get_name())
-		bul.reward=weapons.DATA[weapon]['kill_reward']
+		bul.reward=d['kill_reward']
+		bul.armor_pen=d['armor_pen']
+		bul.falloff_start=d['falloff_start']
+		bul.falloff_end=d['falloff_end']
+		bul.falloff_min=d['falloff_min']
+		bul.origin=$firepoint.global_position
 		bul.global_rotation=a
 		bul.global_position=$firepoint.global_position
 		bul.apply_impulse(Vector2(0,0),Vector2(cos(a),sin(a))*2000)
@@ -263,7 +356,7 @@ sync func melee(damage,rng,reward):
 			continue
 		var to=p.global_position-global_position
 		if to.length()<=rng and facing.dot(to.normalized())>0.7:
-			p.take_damage(damage,int(get_name()),reward)
+			p.take_damage(damage,int(get_name()),reward,weapons.DATA[weapon]['armor_pen'])
 
 sync func die():
 	if !alive:
@@ -289,6 +382,10 @@ sync func respawn(pos):
 	pla=false
 	last_hit_by=0
 	last_reward=0
+	velocity=Vector2(0,0)
+	inaccuracy=0.0
+	shot_index=0
+	since_shot=9.0
 	reset_loadout()
 	set_collision_layer(col_layer)
 	set_collision_mask(col_mask)

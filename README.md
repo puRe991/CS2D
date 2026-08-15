@@ -54,17 +54,35 @@ a crosshair in the middle.
 
 ## Weapons
 
-| Weapon | Magazine | Damage | Fire mode |
-| --- | --- | --- | --- |
-| Handgun | 12 | 25 | Semi |
-| Rifle | 30 | 22 | Automatic, slight spread |
-| Shotgun | 8 | 13 per pellet, 6 pellets | Semi, wide spread |
-| Knife | - | 55 | Melee, 190 px in front of you |
+| Weapon | Magazine | Damage | Fire mode | Armour pierced |
+| --- | --- | --- | --- | --- |
+| Handgun | 12 | 25 | Semi | 25% |
+| Rifle | 30 | 22 | Automatic | 70% |
+| Shotgun | 8 | 13 per pellet, 6 pellets | Semi, wide cone | 30% |
+| Knife | - | 55 | Melee, 190 px in front of you | 85% |
 
 The rate of fire is the playback speed of each weapon's shoot animation, so
 the picture and the timing can never drift apart. Sprite frames are loaded
 per weapon on first use and shared by every player, because holding all 420
 frames at once would keep about 90 MB of textures open.
+
+### Accuracy
+
+Standing still, the first shot goes exactly where you point. Everything else
+widens the cone: running adds spread in proportion to your speed, and every
+shot adds recoil that decays again once you stop firing. Each weapon also
+has a fixed spray pattern, so holding the trigger pulls the shots along a
+learnable path that you can compensate for with the mouse, and the pattern
+starts over after a short pause. Damage falls off with distance down to a
+floor, and the heavier the weapon, the slower you carry it.
+
+### Movement
+
+Movement has weight. You accelerate up to speed and coast to a stop instead
+of starting and stopping instantly, so you cannot fire accurately the moment
+you let go of a key. Pressing the opposite direction brakes far harder than
+letting go — 4 frames instead of 9 — which is counter-strafing: tap the
+other key and you are accurate again almost at once.
 
 ## Teams and rounds
 
