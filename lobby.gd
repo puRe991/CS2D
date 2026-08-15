@@ -1,7 +1,8 @@
 extends Control
 
-const AMBER=Color(0.87,0.62,0.15)
-const MUTED=Color(0.62,0.68,0.75)
+const GREEN=Color(0.55,0.82,0.29)
+const WHITE=Color(0.93,0.95,0.96)
+const MUTED=Color(0.48,0.53,0.58)
 
 var panes={}
 
@@ -25,12 +26,12 @@ func fill_controls():
 	for row in settings.KEY_ROWS:
 		var name_label=Label.new()
 		name_label.text=row[1]
-		name_label.add_color_override('font_color',Color(0.78,0.82,0.87))
+		name_label.add_color_override('font_color',Color(0.78,0.82,0.86))
 		name_label.rect_min_size=Vector2(180,0)
 		grid.add_child(name_label)
 		var key_label=Label.new()
 		key_label.text=settings.binding_text(row[0])
-		key_label.add_color_override('font_color',AMBER)
+		key_label.add_color_override('font_color',GREEN)
 		key_label.rect_min_size=Vector2(110,0)
 		grid.add_child(key_label)
 
@@ -45,7 +46,7 @@ func set_option_button(b,on):
 	var col=MUTED
 	b.text='OFF'
 	if on:
-		col=AMBER
+		col=GREEN
 		b.text='ON'
 	#Im Toggle-Zustand zieht der Button font_color_pressed, nicht font_color
 	b.add_color_override('font_color',col)
@@ -59,9 +60,9 @@ func show_pane(which):
 		var active=(key==which)
 		pane.visible=active
 		if active:
-			nav.add_color_override('font_color',AMBER)
-			$indicator.margin_top=nav.margin_top
-			$indicator.margin_bottom=nav.margin_bottom
+			nav.add_color_override('font_color',WHITE)
+			$tab_ind.margin_left=nav.margin_left
+			$tab_ind.margin_right=nav.margin_right
 		else:
 			nav.add_color_override('font_color',MUTED)
 
